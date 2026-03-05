@@ -12,4 +12,4 @@ on_error:
   unresolved_variable: "halt"
 
 output:
-  primary: "{implementation_artifacts}/{story_key}.md"
+  primary: "{implementation_artifacts}/{story_key}-{story_title_slug}.md"
