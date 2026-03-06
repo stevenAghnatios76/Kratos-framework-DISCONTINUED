@@ -57,6 +57,7 @@
 </step>
 <step n="9" title="Update Review Gate">
   <action>Read story file, locate Review Gate table</action>
+  <action>If Review Gate table is missing: initialize it with EXACTLY 3 rows — Code Review (PENDING), QA Tests (PENDING), Security Review (PENDING). Do NOT add any other rows.</action>
   <action>If PASSED: update Security Review row status to PASSED, link report file</action>
   <action>If FAILED: update Security Review row status to FAILED, link report file, set story status to 'in-progress' in story file and sprint-status.yaml</action>
   <invoke-protocol name="review-gate-check" />

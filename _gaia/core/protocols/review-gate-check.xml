@@ -3,10 +3,14 @@
   Shared protocol invoked by each review workflow after updating its Review Gate row.
   Checks if ALL reviews have passed and transitions story to done if so.
 </description>
+<critical>
+  <mandate>The Review Gate table must have EXACTLY 3 rows: Code Review, QA Tests, Security Review. No other rows are valid. If extra rows exist, remove them.</mandate>
+</critical>
 <step n="1" title="Read Review Gate">
   <action>Read the story file's Review Gate table</action>
+  <action>If Review Gate section is missing: initialize it with EXACTLY 3 rows — Code Review (PENDING), QA Tests (PENDING), Security Review (PENDING). Do NOT add any other rows.</action>
+  <action>If Review Gate table has extra rows beyond the 3 valid ones: remove the invalid rows</action>
   <action>Parse each row: Review name, Status (PENDING | PASSED | FAILED), Report link</action>
-  <action>If Review Gate section is missing: HALT with message "Review Gate section not found — did dev-story transition to review properly?"</action>
 </step>
 <step n="2" title="Evaluate Gate">
   <action>Count: total rows, PASSED rows, FAILED rows, PENDING rows</action>
