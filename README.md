@@ -458,6 +458,22 @@ The adversarial review is a cynical, critical examination designed to find flaws
 
 At each point you can accept or skip. It can also be run independently anytime with `/gaia-adversarial` on any artifact.
 
+### Lifecycle-Integrated Reviews
+
+In addition to the adversarial review, 5 other review tasks are integrated as optional prompts at natural lifecycle points:
+
+| Review Command | Trigger Point | When Prompted | Recommended For |
+|---|---|---|---|
+| `/gaia-review-api` | After `/gaia-create-arch` | End of architecture design (step 9) | Projects with REST APIs |
+| `/gaia-review-a11y` | After `/gaia-create-ux` | End of UX design (step 8) | User-facing applications |
+| `/gaia-edge-cases` | After `/gaia-create-epics` | End of epic/story creation (step 8) | Before sprint planning |
+| `/gaia-review-deps` | During `/gaia-brownfield` | After dependency map (step 5) | Brownfield projects |
+| `/gaia-review-perf` | After `/gaia-dev-story` | After post-complete gate (step 11) | Hot paths, data-heavy stories |
+
+`/gaia-review-security` is already covered by the triple review gate (`/gaia-security-review`) in Phase 4 and does not need a separate lifecycle prompt.
+
+All reviews can also be run independently anytime on any artifact or codebase.
+
 ### Editorial & Documentation
 
 | Command | Task | Description |
@@ -602,7 +618,7 @@ The single source of truth for project settings at `_gaia/_config/global.yaml`:
 
 ```yaml
 framework_name: "GAIA"
-framework_version: "1.4.2"
+framework_version: "1.5.0"
 
 user_name: "your-name"
 project_name: "your-project"
@@ -651,12 +667,12 @@ Pre-built team compositions for different project types:
 
 # Phase 2: Planning
 /gaia-create-prd           → write the PRD (optional: adversarial review)
-/gaia-create-ux            → design the UX
+/gaia-create-ux            → design the UX (optional: accessibility review)
 
 # Phase 3: Solutioning
-/gaia-create-arch          → design the architecture (optional: adversarial review)
+/gaia-create-arch          → design the architecture (optional: API review, adversarial review)
 /gaia-test-design          → create test plan (optional: scaffold test framework)
-/gaia-create-epics         → break into epics and stories (optional: adversarial review)
+/gaia-create-epics         → break into epics and stories (optional: edge cases, adversarial review)
 /gaia-trace                → generate traceability matrix
 /gaia-ci-setup             → scaffold CI pipeline
 /gaia-readiness-check      → verify everything is ready (optional: adversarial review)
@@ -667,7 +683,7 @@ Pre-built team compositions for different project types:
 /gaia-validate-story       → validate story completeness
 /gaia-fix-story            → fix issues from validation
 /gaia-atdd                 → write acceptance tests (REQUIRED for high-risk stories)
-/gaia-dev-story            → implement stories
+/gaia-dev-story            → implement stories (optional: performance review)
 /gaia-code-review          → review the code
 /gaia-qa-tests             → generate tests
 /gaia-security-review      → security audit
@@ -708,7 +724,7 @@ Pre-built team compositions for different project types:
 /gaia-validate-story       → validate story completeness
 /gaia-fix-story            → fix issues from validation
 /gaia-atdd                 → write acceptance tests (REQUIRED for high-risk stories)
-/gaia-dev-story            → implement gap stories
+/gaia-dev-story            → implement gap stories (optional: performance review)
 /gaia-code-review          → review the code
 /gaia-qa-tests             → generate tests
 /gaia-security-review      → security audit

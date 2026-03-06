@@ -58,7 +58,12 @@
   <action>Verify all subtasks marked complete</action>
   <check if="any_test_fails">HALT: All tests must pass before marking complete</check>
 </step>
-<step n="11" title="Update Status">
+<step n="11" title="Optional: Performance Review">
+  <ask>Would you like to run a performance review on the code changes? /gaia-review-perf will check for N+1 queries, memory leaks, bundle size issues, unnecessary re-renders, caching opportunities, and algorithm complexity. Recommended for stories touching hot paths or data-heavy features. (yes/no)</ask>
+  <action>If yes: run /gaia-review-perf targeting the files changed in this story</action>
+  <action>If no: skip — performance review can be run anytime later with /gaia-review-perf</action>
+</step>
+<step n="12" title="Update Status">
   <action>Set story status to 'review' in story file</action>
   <action>Update sprint-status.yaml: set story to 'review'</action>
   <action>Append files changed list to story file</action>

@@ -44,7 +44,12 @@
       - AC1: {criteria}
   </template-output>
 </step>
-<step n="8" title="Optional: Adversarial Review">
+<step n="8" title="Optional: Edge Case Analysis">
+  <ask>Would you like to hunt for edge cases in the stories? /gaia-edge-cases will identify boundary conditions, race conditions, null/empty inputs, overflow scenarios, and error chains. Recommended to catch gaps before sprint planning. (yes/no)</ask>
+  <action>If yes: run /gaia-edge-cases targeting {planning_artifacts}/epics-and-stories.md</action>
+  <action>If no: skip — edge case analysis can be run anytime later with /gaia-edge-cases</action>
+</step>
+<step n="9" title="Optional: Adversarial Review">
   <ask>Would you like to run an adversarial review on the epics and stories? This will challenge story completeness, missing edge cases, dependency gaps, and acceptance criteria quality. Recommended before sprint planning. (yes/no)</ask>
   <action>If yes: run /gaia-adversarial targeting {planning_artifacts}/epics-and-stories.md</action>
   <action>If no: skip — adversarial review can be run anytime later with /gaia-adversarial</action>

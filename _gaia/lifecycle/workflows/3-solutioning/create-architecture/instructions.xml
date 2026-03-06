@@ -44,7 +44,12 @@
     Generate architecture document with: technology stack, system architecture, data architecture, API design, infrastructure plan, and ADR references.
   </template-output>
 </step>
-<step n="9" title="Optional: Adversarial Review">
+<step n="9" title="Optional: API Design Review">
+  <ask>Would you like to review the API design against REST standards? /gaia-review-api will check naming conventions, HTTP methods, status codes, versioning, pagination, and error formats. Recommended if your architecture includes APIs. (yes/no)</ask>
+  <action>If yes: run /gaia-review-api targeting the API Design section of {planning_artifacts}/architecture.md</action>
+  <action>If no: skip — API review can be run anytime later with /gaia-review-api</action>
+</step>
+<step n="10" title="Optional: Adversarial Review">
   <ask>Would you like to run an adversarial review on the architecture? This will critically challenge technical decisions, scalability assumptions, failure modes, security surfaces, and dependency risks. Recommended for distributed systems or high-scale projects. (yes/no)</ask>
   <action>If yes: run /gaia-adversarial targeting {planning_artifacts}/architecture.md</action>
   <action>If no: skip — adversarial review can be run anytime later with /gaia-adversarial</action>

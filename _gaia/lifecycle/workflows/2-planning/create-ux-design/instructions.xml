@@ -34,4 +34,9 @@
     Generate UX design document with: personas, information architecture, wireframe descriptions, interaction patterns, component specifications, and accessibility plan.
   </template-output>
 </step>
+<step n="8" title="Optional: Accessibility Review">
+  <ask>Would you like to review the UX design for WCAG 2.1 accessibility compliance? /gaia-review-a11y will check ARIA usage, keyboard navigation, color contrast, screen reader support, and semantic structure. Recommended for user-facing applications. (yes/no)</ask>
+  <action>If yes: run /gaia-review-a11y targeting {planning_artifacts}/ux-design.md</action>
+  <action>If no: skip — accessibility review can be run anytime later with /gaia-review-a11y</action>
+</step>
 </workflow>

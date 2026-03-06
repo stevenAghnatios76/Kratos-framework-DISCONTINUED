@@ -75,6 +75,9 @@
   <template-output file="{planning_artifacts}/dependency-map.md">
     Generate dependency map following the dependency-map-template. Include external service table, infrastructure table, key library table with CVE risk, Mermaid dependency graph, contracts/SLAs, and risk recommendations.
   </template-output>
+  <ask>Would you like to run a dependency audit? /gaia-review-deps will scan for outdated versions, known CVEs, license conflicts, and unused dependencies. Recommended for brownfield projects. (yes/no)</ask>
+  <action>If yes: run /gaia-review-deps targeting {planning_artifacts}/dependency-map.md</action>
+  <action>If no: skip — dependency audit can be run anytime later with /gaia-review-deps</action>
 </step>
 
 <step n="6" title="NFR Assessment &amp; Baselines">
