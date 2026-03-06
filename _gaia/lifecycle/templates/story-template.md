@@ -91,6 +91,7 @@ As a {role}, I want to {action}, so that {benefit}.
 | Security Review | PENDING | — |
 | Test Automation | PENDING | — |
 | Test Review | PENDING | — |
+| Performance Review | PENDING | — |
 
 > Story moves to `done` only when ALL reviews show PASSED.
 

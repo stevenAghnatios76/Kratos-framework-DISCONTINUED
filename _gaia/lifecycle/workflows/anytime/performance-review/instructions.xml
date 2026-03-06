@@ -1,40 +1,74 @@
 <workflow name="performance-review">
 <critical>
+  <mandate>Story must be in review status before performance review</mandate>
+  <mandate>Auto-pass if no performance-relevant code changes detected</mandate>
   <mandate>Always measure before recommending optimizations</mandate>
   <mandate>Report in percentiles (P50, P95, P99), not averages</mandate>
-  <mandate>Compare against baseline — never optimize blind</mandate>
+  <mandate>Output must include machine-readable PASSED or FAILED verdict</mandate>
+  <mandate>After updating the Review Gate, if all 6 rows are PASSED and story is in 'review', you MUST transition story to 'done'</mandate>
 </critical>
-<step n="1" title="Scope">
-  <action>Define what to measure: specific endpoints, user flows, or full system</action>
-  <action>Identify performance-critical paths from user perspective</action>
-  <action>Determine frontend vs backend vs both scope</action>
+<step n="1" title="Load Story">
+  <action>Read story file, identify files changed</action>
+  <action>Extract the list of files changed from the story file</action>
 </step>
-<step n="2" title="Baseline Capture">
-  <action>Document current performance metrics or establish baseline plan</action>
-  <action>Identify existing SLOs and performance budgets</action>
-  <action>Capture Core Web Vitals if frontend is in scope: LCP, FID, CLS</action>
+<step n="2" title="Status Gate">
+  <action>Verify story is in 'review' status</action>
+  <check if="status != review">HALT: Story must be in review status before performance review</check>
 </step>
-<step n="3" title="Load Test Design">
-  <action>Define test scenarios matching real user behavior</action>
-  <action>Design traffic patterns: steady state, ramp-up, spike, soak</action>
-  <action>Specify concurrent user targets and ramp-up strategy</action>
-  <action>Recommend tooling: k6, Locust, Artillery, or alternatives</action>
+<step n="3" title="Auto-Pass Classification">
+  <action>Classify each changed file as performance-relevant or not:</action>
+  <action>Performance-relevant: files containing DB queries, API endpoints, data processing, rendering logic, loops/algorithms, middleware, caching, network calls</action>
+  <action>Not relevant: markdown (.md), config/yaml/json, test files, static assets, CSS-only, copy/translations, .gitignore, lock files</action>
+  <check if="zero performance-relevant files">
+    Verdict is PASSED with note "No performance-relevant code changes — auto-passed". Skip to step 8 (Generate Output) with this verdict.
+  </check>
+  <action>If ANY performance-relevant files exist: proceed to full review (step 4)</action>
 </step>
-<step n="4" title="Bottleneck Identification">
-  <action>Analyze for N+1 queries and inefficient database access</action>
-  <action>Check for blocking operations and synchronous bottlenecks</action>
+<step n="4" title="N+1 and Database Analysis">
+  <action>Analyze for N+1 queries and inefficient database access patterns</action>
+  <action>Check for missing indexes on queried columns</action>
+  <action>Identify unbounded queries (missing LIMIT, pagination)</action>
+</step>
+<step n="5" title="Memory and Bundle Analysis">
   <action>Identify memory leaks, large payloads, unoptimized loops</action>
-  <action>Review caching strategy: what's cached, what should be</action>
-  <action>Check frontend: bundle size, render blocking, image optimization</action>
+  <action>Check frontend: bundle size impact, render blocking, unnecessary re-renders</action>
+  <action>Review image optimization and lazy loading</action>
 </step>
-<step n="5" title="Optimization Recommendations">
-  <action>Provide specific, prioritized improvements with estimated impact</action>
-  <action>Categorize: quick wins, medium effort, architectural changes</action>
-  <action>Include implementation guidance for each recommendation</action>
+<step n="6" title="Caching and Complexity Review">
+  <action>Review caching strategy: what's cached, what should be, cache invalidation</action>
+  <action>Check for blocking operations and synchronous bottlenecks</action>
+  <action>Analyze algorithm complexity — flag O(n^2) or worse in hot paths</action>
 </step>
-<step n="6" title="Generate Report">
-  <template-output file="{test_artifacts}/performance-review-{date}.md">
-    Generate performance review with: scope, baseline metrics, load test design, bottleneck analysis, prioritized recommendations with estimated impact.
+<step n="7" title="Verdict">
+  <action>If NO critical or high severity performance issues: verdict is PASSED</action>
+  <action>If ANY critical or high severity issue found: verdict is FAILED — list blocking findings</action>
+</step>
+<step n="8" title="Generate Output">
+  <template-output file="{implementation_artifacts}/{story_key}-performance-review.md">
+    Generate performance review report with: auto-pass classification result (if applicable), N+1 analysis, memory/bundle findings, caching review, algorithm complexity, and machine-readable verdict (PASSED/FAILED).
+  </template-output>
+</step>
+<step n="9" title="Update Review Gate">
+  <action>Read story file, locate Review Gate table</action>
+  <action>If Review Gate table is missing: initialize it with EXACTLY 6 rows — Code Review (PENDING), QA Tests (PENDING), Security Review (PENDING), Test Automation (PENDING), Test Review (PENDING), Performance Review (PENDING). Do NOT add any other rows.</action>
+  <action>If PASSED: update Performance Review row status to PASSED, link report file</action>
+  <action>If FAILED: update Performance Review row status to FAILED, link report file, set story status to 'in-progress' in story file and sprint-status.yaml</action>
+  <template-output file="{implementation_artifacts}/{story_key}.md">
+    Update story file Review Gate table with performance review result and report link. If FAILED, also update story status to in-progress.
+  </template-output>
+</step>
+<step n="10" title="Transition Story If Gate Passed">
+  <critical>
+    <mandate>You MUST execute this step even if the Review Gate was already fully passed before this workflow run. The purpose of this step is to ensure the story status matches the gate state.</mandate>
+  </critical>
+  <action>Re-read the story file now. Check two things: (1) the Review Gate table rows, (2) the current story status.</action>
+  <action>The Review Gate table must have EXACTLY 6 rows: Code Review, QA Tests, Security Review, Test Automation, Test Review, Performance Review. Remove any other rows.</action>
+  <action>If ALL 6 rows show PASSED AND the story status is still 'review': you MUST change the story status to 'done' in the story file AND in sprint-status.yaml. This is a REQUIRED write operation, not informational.</action>
+  <action>If ALL 6 rows show PASSED AND the story status is already 'done': log "Story already done. No update needed."</action>
+  <action>If any row is FAILED: log which reviews failed. Do not change story status.</action>
+  <action>If any row is PENDING: log which reviews are still pending. Do not change story status.</action>
+  <template-output file="{implementation_artifacts}/sprint-status.yaml">
+    Read sprint-status.yaml. If all 6 Review Gate rows are PASSED and the story status is 'review', update the story status to 'done' and save the file.
   </template-output>
 </step>
 </workflow>

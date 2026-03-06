@@ -462,7 +462,7 @@ At each point you can accept or skip. It can also be run independently anytime w
 
 In addition to the adversarial review, several other tasks are integrated into the lifecycle at natural trigger points:
 
-**Review Gate members** (required — story cannot move to `done` without all 5 passing):
+**Review Gate members** (required — story cannot move to `done` without all 6 passing):
 
 | Review Command | Gate Row | Verdict | What It Checks |
 |---|---|---|---|
@@ -471,6 +471,7 @@ In addition to the adversarial review, several other tasks are integrated into t
 | `/gaia-security-review` | Security Review | PASSED / FAILED | OWASP Top 10, secrets, auth patterns |
 | `/gaia-test-automate` | Test Automation | PASSED / FAILED | Coverage gaps, uncovered code paths |
 | `/gaia-test-review` | Test Review | PASSED / FAILED | Test quality, flakiness, isolation, determinism |
+| `/gaia-review-perf` | Performance Review | PASSED / FAILED | N+1 queries, memory, bundle size, caching, complexity. Auto-passes if no performance-relevant code changes |
 
 **Optional prompts** (offered at natural lifecycle points — user can accept or skip):
 
@@ -480,7 +481,7 @@ In addition to the adversarial review, several other tasks are integrated into t
 | `/gaia-review-a11y` | After `/gaia-create-ux` | End of UX design (step 8) | User-facing applications |
 | `/gaia-edge-cases` | After `/gaia-create-epics` | End of epic/story creation (step 8) | Before sprint planning |
 | `/gaia-review-deps` | During `/gaia-brownfield` | After dependency map (step 5) | Brownfield projects |
-| `/gaia-review-perf` | After `/gaia-dev-story` | After post-complete gate (step 11) | Hot paths, data-heavy stories |
+| `/gaia-review-perf` | Review Gate member | Required (auto-passes if no perf-relevant changes) | See Review Gate members table above |
 | `/gaia-a11y-testing` | During `/gaia-deploy-checklist` | After loading context (step 2) | Frontend/user-facing applications |
 | `/gaia-mobile-testing` | During `/gaia-sprint-plan` | After story selection (step 4) | Mobile/responsive applications |
 
@@ -630,7 +631,7 @@ The single source of truth for project settings at `_gaia/_config/global.yaml`:
 
 ```yaml
 framework_name: "GAIA"
-framework_version: "1.6.0"
+framework_version: "1.7.0"
 
 user_name: "your-name"
 project_name: "your-project"
@@ -695,12 +696,13 @@ Pre-built team compositions for different project types:
 /gaia-validate-story       → validate story completeness
 /gaia-fix-story            → fix issues from validation
 /gaia-atdd                 → write acceptance tests (REQUIRED for high-risk stories)
-/gaia-dev-story            → implement stories (optional: performance review)
+/gaia-dev-story            → implement stories
 /gaia-code-review          → review the code          ─┐
-/gaia-qa-tests             → generate tests             │ Review Gate
-/gaia-security-review      → security audit              │ (all 5 must
-/gaia-test-automate        → expand test coverage        │  PASS before
-/gaia-test-review          → review test quality        ─┘  story → done)
+/gaia-qa-tests             → generate tests             │
+/gaia-security-review      → security audit              │ Review Gate
+/gaia-test-automate        → expand test coverage        │ (all 6 must
+/gaia-test-review          → review test quality         │  PASS before
+/gaia-review-perf          → performance review         ─┘  story → done)
 /gaia-triage-findings      → triage dev findings into backlog
 /gaia-retro                → sprint retrospective
 
@@ -738,12 +740,13 @@ Pre-built team compositions for different project types:
 /gaia-validate-story       → validate story completeness
 /gaia-fix-story            → fix issues from validation
 /gaia-atdd                 → write acceptance tests (REQUIRED for high-risk stories)
-/gaia-dev-story            → implement gap stories (optional: performance review)
+/gaia-dev-story            → implement gap stories
 /gaia-code-review          → review the code          ─┐
-/gaia-qa-tests             → generate tests             │ Review Gate
-/gaia-security-review      → security audit              │ (all 5 must
-/gaia-test-automate        → expand test coverage        │  PASS before
-/gaia-test-review          → review test quality        ─┘  story → done)
+/gaia-qa-tests             → generate tests             │
+/gaia-security-review      → security audit              │ Review Gate
+/gaia-test-automate        → expand test coverage        │ (all 6 must
+/gaia-test-review          → review test quality         │  PASS before
+/gaia-review-perf          → performance review         ─┘  story → done)
 /gaia-triage-findings      → triage dev findings into backlog
 /gaia-retro                → sprint retrospective
 
