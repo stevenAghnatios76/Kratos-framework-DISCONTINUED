@@ -39,16 +39,14 @@
   </step>
 
   <step n="4" title="Generate Report">
-    <action>Produce edge case findings with:
-      - Summary: N edge cases found, M are critical
-      - Findings table: location, boundary type, unhandled case, concrete example, severity
-      - Each finding includes a specific scenario that would trigger the edge case
-    </action>
+    <template-output file="{planning_artifacts}/edge-case-report-{date}.md">
+      Generate edge case report with: summary (N edge cases found, M critical), findings table (location, boundary type, unhandled case, concrete example, severity), and specific trigger scenarios for each finding.
+    </template-output>
   </step>
 </flow>
 
 <output>
   <format>Markdown edge case report with concrete test scenarios</format>
-  <location>Displayed to user (not saved unless requested)</location>
+  <location>{planning_artifacts}/edge-case-report-{date}.md</location>
 </output>
 </task>

@@ -3,7 +3,7 @@
 
 modules:
   - name: core
-    version: "1.0.5"
+    version: "1.0.6"
     path: "_gaia/core"
     type: built-in
   - name: lifecycle

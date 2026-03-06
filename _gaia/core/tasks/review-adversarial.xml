@@ -31,16 +31,14 @@
   </step>
 
   <step n="3" title="Generate Report">
-    <action>Produce adversarial findings with:
-      - Threat summary: top 3 most critical issues
-      - Full findings table: severity (critical/high/medium/low), confidence (certain/likely/possible), category, description
-      - Risk assessment: overall risk level for proceeding as-is
-    </action>
+    <template-output file="{planning_artifacts}/adversarial-review-{date}.md">
+      Generate adversarial review report with: threat summary (top 3 most critical issues), full findings table (severity, confidence, category, description), and overall risk assessment for proceeding as-is.
+    </template-output>
   </step>
 </flow>
 
 <output>
   <format>Markdown adversarial review report</format>
-  <location>Displayed to user (not saved unless requested)</location>
+  <location>{planning_artifacts}/adversarial-review-{date}.md</location>
 </output>
 </task>

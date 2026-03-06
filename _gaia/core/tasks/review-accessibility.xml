@@ -28,12 +28,14 @@
     <action>Verify text scaling support</action>
   </step>
   <step n="5" title="Report">
-    <action>Generate findings with WCAG success criteria references</action>
+    <template-output file="{test_artifacts}/accessibility-review-{date}.md">
+      Generate accessibility review report with WCAG 2.1 success criteria references, findings by category (semantic HTML, ARIA, keyboard, focus, visual, screen reader), severity levels, and remediation guidance.
+    </template-output>
   </step>
 </flow>
 
 <output>
   <format>Markdown accessibility findings with WCAG criteria</format>
-  <location>Displayed to user (not saved unless requested)</location>
+  <location>{test_artifacts}/accessibility-review-{date}.md</location>
 </output>
 </task>

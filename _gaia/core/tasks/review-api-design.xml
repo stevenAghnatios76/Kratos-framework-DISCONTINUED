@@ -25,12 +25,14 @@
     <action>Verify API versioning strategy (URL, header, or query param)</action>
   </step>
   <step n="5" title="Report">
-    <action>Generate API design findings with severity and recommendations</action>
+    <template-output file="{planning_artifacts}/api-design-review-{date}.md">
+      Generate API design review report with findings by category (naming, HTTP methods, status codes, error format, versioning), severity levels, and recommendations.
+    </template-output>
   </step>
 </flow>
 
 <output>
   <format>Markdown API design findings report</format>
-  <location>Displayed to user (not saved unless requested)</location>
+  <location>{planning_artifacts}/api-design-review-{date}.md</location>
 </output>
 </task>

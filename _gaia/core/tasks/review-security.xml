@@ -24,12 +24,14 @@
     <action>Check for privilege escalation paths</action>
   </step>
   <step n="5" title="Report">
-    <action>Generate findings with severity levels: critical, high, medium, low</action>
+    <template-output file="{planning_artifacts}/security-review-{date}.md">
+      Generate security review report with OWASP findings table, secrets scan results, auth pattern review, severity levels (critical, high, medium, low), and remediation recommendations.
+    </template-output>
   </step>
 </flow>
 
 <output>
   <format>Markdown findings report with severity: critical/high/medium/low</format>
-  <location>Displayed to user (not saved unless requested)</location>
+  <location>{planning_artifacts}/security-review-{date}.md</location>
 </output>
 </task>
