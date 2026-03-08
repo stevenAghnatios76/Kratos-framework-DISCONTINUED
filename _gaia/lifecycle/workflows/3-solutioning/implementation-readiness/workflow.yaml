@@ -26,6 +26,14 @@ input_file_patterns:
   ci_setup:
     whole: "{test_artifacts}/ci-setup.md"
     load_strategy: "FULL_LOAD"
+  threat_model:
+    whole: "{planning_artifacts}/threat-model.md"
+    load_strategy: "FULL_LOAD"
+    optional: true
+  infrastructure_design:
+    whole: "{planning_artifacts}/infrastructure-design.md"
+    load_strategy: "FULL_LOAD"
+    optional: true
 quality_gates:
   pre_start:
     - check: "traceability_exists"

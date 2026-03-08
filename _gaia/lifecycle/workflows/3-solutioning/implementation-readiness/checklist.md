@@ -12,6 +12,16 @@ validation-target: 'Readiness gate report'
 - [ ] Architecture covers all features
 - [ ] prd.md contains "Review Findings Incorporated" section
 - [ ] architecture.md contains "Review Findings Incorporated" section
+## Cross-Artifact Contradictions
+- [ ] Architecture decisions checked against threat model security requirements (if threat-model.md exists)
+- [ ] Architecture topology checked against infrastructure deployment topology (if infrastructure-design.md exists)
+- [ ] Story component references verified against architecture component inventory
+- [ ] PRD NFR targets verified against architecture design decisions
+- [ ] Critical/high security requirements verified against story acceptance criteria (if threat-model.md exists)
+- [ ] Auth strategy alignment verified across PRD, architecture, and threat model
+- [ ] contradiction_check field present in gate report YAML frontmatter
+- [ ] All BLOCKING contradictions listed in blocking_issues
+- [ ] Contradictions table included in report body
 ## TEA Readiness
 - [ ] Acceptance criteria are testable
 - [ ] NFR targets quantified
@@ -36,6 +46,7 @@ validation-target: 'Readiness gate report'
 ## Report
 - [ ] Machine-readable YAML frontmatter present
 - [ ] PASS/FAIL status clear
+- [ ] contradictions_found and contradictions_blocking counts in frontmatter
 - [ ] Blocking issues listed if FAIL
 ## Output Verification
 - [ ] Output file exists at {planning_artifacts}/readiness-report.md

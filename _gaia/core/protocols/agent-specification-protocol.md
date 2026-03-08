@@ -15,6 +15,33 @@ inline specification block holds agent-specific scope, authority, and DoD.
   <rule>Never override another agent's output without user consent</rule>
 </conflict-resolution>
 
+<decision-authority-matrix>
+  <purpose>When cross-artifact contradictions are detected, this matrix defines
+  which agent's recommendation takes precedence. User remains final arbiter.
+  Referenced by implementation-readiness workflow contradiction check.</purpose>
+  <domain name="technology-selection" authority="architect" agent="Theo" />
+  <domain name="component-boundaries" authority="architect" agent="Theo" />
+  <domain name="api-contracts" authority="architect" agent="Theo" />
+  <domain name="data-model" authority="architect" agent="Theo" />
+  <domain name="auth-mechanism" authority="security" agent="Zara" />
+  <domain name="threat-severity" authority="security" agent="Zara" />
+  <domain name="security-requirements" authority="security" agent="Zara" />
+  <domain name="encryption-standards" authority="security" agent="Zara" />
+  <domain name="deployment-topology" authority="devops" agent="Soren" />
+  <domain name="container-orchestration" authority="devops" agent="Soren" />
+  <domain name="ci-cd-pipeline" authority="devops" agent="Soren" />
+  <domain name="monitoring-alerting" authority="devops" agent="Soren" />
+  <domain name="feature-scope" authority="pm" agent="Derek" />
+  <domain name="requirement-priority" authority="pm" agent="Derek" />
+  <domain name="nfr-targets" authority="pm" agent="Derek" />
+  <domain name="test-strategy" authority="test-architect" agent="Sable" />
+  <domain name="ux-patterns" authority="ux-designer" agent="Christy" />
+  <overlap-rule>When a contradiction spans two domains (e.g., auth-mechanism
+  vs deployment-topology), the domain with higher security or safety impact
+  takes precedence. Present both positions to user with trade-offs per
+  conflict-resolution rules above.</overlap-rule>
+</decision-authority-matrix>
+
 <memory-access>
   <rule>READ own sidecar memory (if declared)</rule>
   <rule>READ shared artifacts from docs/{planning,implementation,test,creative}-artifacts/</rule>

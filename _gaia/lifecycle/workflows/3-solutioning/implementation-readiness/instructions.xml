@@ -23,23 +23,53 @@
   <action>Verify architecture.md contains a "## Review Findings Incorporated" section — confirms adversarial review findings were consumed</action>
   <action>Check for terminology consistency across documents</action>
 </step>
-<step n="4" title="TEA Readiness">
+<step n="4" title="Cross-Artifact Contradiction Check">
+  <action>Load decision-authority-matrix from {project-root}/_gaia/core/protocols/agent-specification-protocol.md — extract domain/authority mappings for contradiction reporting</action>
+  <action>CHECK 1 — Architecture vs Threat Model (skip if {planning_artifacts}/threat-model.md does not exist — log "INFO: threat model not available, architecture/security cross-check skipped"):
+    Extract security requirements (SR-*) and mitigations from threat-model.md.
+    For each SR-*, verify architecture.md contains a component, design decision, or ADR that addresses it.
+    Flag unaddressed SR-* items as contradictions. Authority: security (Zara). Severity: BLOCKING if Critical/High, WARNING if Medium/Low.</action>
+  <action>CHECK 2 — Architecture vs Infrastructure Design (skip if {planning_artifacts}/infrastructure-design.md does not exist — log "INFO: infrastructure design not available, topology cross-check skipped"):
+    Compare deployment topology in infrastructure-design.md against system architecture section in architecture.md.
+    Flag mismatches: architectural style vs deployment model, service boundaries vs container boundaries, communication patterns vs networking design.
+    Authority: deployment-topology decisions → Soren, component-boundary decisions → Theo. Severity: BLOCKING.</action>
+  <action>CHECK 3 — Architecture vs Stories:
+    Extract architecture components from architecture.md (services, databases, APIs, external integrations).
+    Scan epics-and-stories.md for component references.
+    Flag: (a) stories referencing components not in architecture — BLOCKING, (b) architecture components with no corresponding stories — WARNING.</action>
+  <action>CHECK 4 — PRD NFRs vs Architecture:
+    Extract quantified NFR targets from prd.md (performance, availability, scalability, security).
+    Verify each has a corresponding architecture design decision or ADR.
+    Flag unaddressed NFRs. Authority: architect (Theo). Severity: WARNING for non-security NFRs, BLOCKING for security NFRs.</action>
+  <action>CHECK 5 — Threat Model vs Stories (skip if threat-model.md does not exist):
+    Extract Critical and High risk security requirements (SR-*) from threat-model.md.
+    Verify each has at least one story whose acceptance criteria addresses it.
+    Flag unaddressed Critical/High SR-* items. Authority: security (Zara). Severity: BLOCKING.</action>
+  <action>CHECK 6 — Auth Strategy Alignment:
+    Extract auth strategy from architecture.md API Design section.
+    Compare against: (a) auth requirements in prd.md, (b) auth-related mitigations in threat-model.md (if exists).
+    Flag mismatches in auth mechanism, session management, or token strategy. Authority: security (Zara). Severity: BLOCKING.</action>
+  <action>Record all contradictions in a structured list:
+    For each: contradiction_id (C-1, C-2, ...), type, source_artifacts, description, authority_agent, severity (BLOCKING/WARNING), recommended_resolution.
+    Count BLOCKING contradictions. If count > 0: set contradiction_check = FAIL. Else: PASS.</action>
+</step>
+<step n="5" title="TEA Readiness">
   <action>Is test strategy implied or defined?</action>
   <action>Are acceptance criteria testable and automatable?</action>
   <action>Are NFR targets quantified for performance testing?</action>
 </step>
-<step n="5" title="Test Infrastructure Readiness">
+<step n="6" title="Test Infrastructure Readiness">
   <action>Verify traceability-matrix.md covers all PRD requirements — flag uncovered requirements as blocking</action>
   <action>Verify ci-setup.md defines enforced quality gates (coverage %, pass rate thresholds) — flag advisory-only gates as a warning</action>
   <action>Verify test-plan.md exists (from /gaia-test-design) — flag absence as blocking</action>
   <action>Record findings as: test_plan_exists: true/false, traceability_complete: true/false, ci_gates_enforced: true/false</action>
 </step>
-<step n="6" title="Security Readiness">
+<step n="7" title="Security Readiness">
   <action>Are security requirements documented in PRD?</action>
   <action>Is authentication/authorization defined in architecture?</action>
   <action>Are data privacy requirements addressed?</action>
 </step>
-<step n="7" title="Brownfield Completeness Check" optional="true" condition="brownfield-onboarding.md exists in {planning_artifacts}">
+<step n="8" title="Brownfield Completeness Check" optional="true" condition="brownfield-onboarding.md exists in {planning_artifacts}">
   <action>Skip this step if {planning_artifacts}/brownfield-onboarding.md does not exist. This step only applies to brownfield projects.</action>
   <action>Verify dependency-map.md exists and has: external services, infrastructure, library dependencies, Mermaid graph</action>
   <action>Verify nfr-assessment.md exists at {test_artifacts}/nfr-assessment.md and has: baseline summary table with real values (not placeholders)</action>
@@ -51,7 +81,7 @@
   <action>Verify brownfield-onboarding.md links to all generated artifacts</action>
   <action>Verify {planning_artifacts}/dependency-audit-*.md exists — required dependency audit was completed</action>
 </step>
-<step n="8" title="Generate Gate Report">
+<step n="9" title="Generate Gate Report">
   <template-output file="{planning_artifacts}/readiness-report.md">
     Generate readiness report with YAML frontmatter:
     ---
@@ -61,19 +91,26 @@
       ux_complete: true/false
       architecture_complete: true/false
       stories_complete: true/false
+      contradiction_check: PASS/FAIL
       tea_ready: true/false
       test_plan_exists: true/false
       traceability_complete: true/false
       ci_gates_enforced: true/false
       security_documented: true/false
       brownfield_complete: true/false/skipped
+    contradictions_found: {count}
+    contradictions_blocking: {blocking_count}
     blocking_issues:
       - "issue description"
     ---
     Then detailed findings for each gate.
+    Include a "## Contradictions" section listing each detected contradiction:
+    | ID | Type | Source Artifacts | Severity | Authority | Description | Recommended Resolution |
+    If no contradictions found, state "No cross-artifact contradictions detected."
+    If checks were skipped (missing optional artifacts), list them as INFO notes.
   </template-output>
 </step>
-<step n="9" title="Optional: Adversarial Review">
+<step n="10" title="Optional: Adversarial Review">
   <ask>Would you like to run an adversarial review on the readiness report and all planning artifacts? Open a new Claude Code terminal and run /gaia-adversarial — it runs in a separate context to preserve this session's budget. This is the last opportunity to catch flaws before implementation begins. Strongly recommended before committing to build. (yes, I'll open a new terminal / skip)</ask>
   <action>If yes: the user opens a new terminal and runs /gaia-adversarial targeting {planning_artifacts}/readiness-report.md (reviewer will pull in referenced artifacts). Wait for confirmation before proceeding.</action>
   <action>If skip: adversarial review can be run anytime later with /gaia-adversarial in a separate terminal</action>
