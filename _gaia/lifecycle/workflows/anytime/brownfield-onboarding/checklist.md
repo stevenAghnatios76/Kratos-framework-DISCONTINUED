@@ -2,7 +2,7 @@
 title: 'Brownfield Onboarding Validation'
 validation-target: 'Brownfield onboarding output'
 ---
-## Discovery
+## Step 1: Discovery
 - [ ] Existing project documented
 - [ ] Tech stack identified
 - [ ] Current architecture mapped
@@ -10,61 +10,34 @@ validation-target: 'Brownfield onboarding output'
 - [ ] Testing infrastructure assessed
 - [ ] CI/CD pipeline documented
 - [ ] Brownfield assessment generated at {planning_artifacts}/brownfield-assessment.md
-## API Documentation (if has_apis)
-- [ ] OpenAPI/Swagger spec status checked (existing spec found or generated)
-- [ ] Endpoint inventory table complete
-- [ ] Authentication and authorization documented
-- [ ] Error response format documented
-- [ ] Mermaid API flow diagram included
-- [ ] Undocumented endpoints listed as gaps
-## UX Design Assessment (if has_frontend)
-- [ ] Existing UI patterns documented (component library, design system, styling)
-- [ ] Navigation structure documented with Mermaid sitemap
-- [ ] Interaction patterns assessed (forms, modals, notifications)
-- [ ] Accessibility assessment completed (WCAG level, gaps)
-- [ ] UX gap analysis identifies only gap-focused improvements
-## Event & Messaging Catalog (if has_events)
-- [ ] Messaging infrastructure documented
-- [ ] Produced events cataloged with schemas
-- [ ] Consumed events cataloged with handlers
-- [ ] Delivery guarantees and DLQ configuration documented
-- [ ] Mermaid event flow diagrams included
-## Dependency Map
-- [ ] External service dependencies documented
-- [ ] Infrastructure dependencies documented
-- [ ] Key library dependencies documented with CVE risk
-- [ ] Mermaid dependency graph included
-- [ ] Risks and recommendations identified
-## NFR Assessment (via /gaia-nfr — REQUIRED)
-- [ ] Code quality baselines measured
-- [ ] Security posture assessed
-- [ ] Performance baselines documented
-- [ ] Test coverage baselines measured
-- [ ] CI/CD assessment completed
-- [ ] NFR baseline summary table has real values (not placeholders)
-- [ ] Output at {test_artifacts}/nfr-assessment.md (canonical location)
-## Performance Test Plan (REQUIRED)
-- [ ] Performance budgets defined (P50/P95/P99)
+## Step 2: Parallel Documentation Subagents
+- [ ] Dependency map subagent completed — {planning_artifacts}/dependency-map.md exists
+- [ ] Dependency audit subagent completed — {planning_artifacts}/dependency-audit-{date}.md exists
+- [ ] API documentation subagent completed (if has_apis) — {planning_artifacts}/api-documentation.md exists
+- [ ] UX design assessment subagent completed (if has_frontend) — {planning_artifacts}/ux-design.md exists
+- [ ] Event catalog subagent completed (if has_events) — {planning_artifacts}/event-catalog.md exists
+- [ ] All API docs use Swagger/OpenAPI format
+- [ ] All diagrams use Mermaid syntax
+## Step 3: NFR Assessment & Performance Test Plan
+- [ ] NFR assessment subagent completed — {test_artifacts}/nfr-assessment.md exists
+- [ ] NFR baseline summary table has real measured values (not placeholders)
+- [ ] Performance test plan created — {test_artifacts}/performance-test-plan-{date}.md exists
+- [ ] Performance budgets defined (P50/P95/P99) based on NFR baselines
 - [ ] Load test scenarios designed (gradual, spike, soak)
 - [ ] Frontend performance targets set if applicable (LCP, INP, CLS)
-- [ ] Backend profiling targets identified
 - [ ] CI performance gates configured with pass/fail thresholds
-- [ ] Output at {test_artifacts}/performance-test-plan-{date}.md
-## Gap Analysis
+## Step 4: Gap Analysis PRD
 - [ ] If prior prd.md existed, user confirmed overwrite or alternate filename used
 - [ ] PRD created with gap-focused content only
 - [ ] NFR section includes current baseline and target from nfr-assessment.md
 - [ ] Upstream artifacts referenced (api-docs, event-catalog, dependency-map, ux-design)
 - [ ] Priority matrix maps each gap to priority/effort/impact
-## Architecture
-- [ ] As-is architecture documented with Mermaid C4 diagrams (Level 1 and Level 2)
-- [ ] 3-5 key flow sequence diagrams in Mermaid syntax
-- [ ] Data flow diagram in Mermaid syntax
-- [ ] Target architecture for gaps documented
-- [ ] As-is vs target delta table included
-- [ ] Cross-references to api-documentation.md, event-catalog.md, dependency-map.md
-## Phase 3 Handoff
-- [ ] Architecture created via subagent
+## Step 5: Adversarial Review
+- [ ] Adversarial review subagent completed — {planning_artifacts}/adversarial-review-{date}.md exists
+- [ ] Critical/high findings incorporated into PRD
+- [ ] "Review Findings Incorporated" section added to PRD
+## Step 6: Architecture & Phase 3 Handoff
+- [ ] Architecture subagent completed — {planning_artifacts}/architecture.md exists
 - [ ] User informed of remaining Phase 3 sequence: /gaia-test-design → /gaia-create-epics → /gaia-readiness-check
 ## Output Verification
 - [ ] Project documentation exists at {planning_artifacts}/project-documentation.md

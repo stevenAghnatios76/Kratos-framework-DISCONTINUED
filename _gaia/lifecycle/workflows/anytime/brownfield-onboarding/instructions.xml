@@ -22,92 +22,21 @@
   </template-output>
 </step>
 
-<step n="2" title="API Documentation — Swagger/OpenAPI" optional="true" condition="{has_apis} == true">
-  <action>Skip this step if {has_apis} is false. Log: "No API layer detected — skipping API documentation."</action>
-  <action>Read the API documentation template from {installed_path}/../../templates/api-documentation-template.md</action>
-  <action>Check if an OpenAPI/Swagger spec file already exists in the project (look for openapi.yaml, swagger.json, etc.)</action>
-  <action>If spec exists: validate it against actual route definitions, flag stale or missing entries</action>
-  <action>If no spec exists: generate an OpenAPI 3.x spec by scanning route definitions, types/DTOs, and middleware. Flag as "Generated from code scan — needs manual review"</action>
-  <action>Document all endpoints: method, path, handler, auth, parameters, request/response schemas, error formats</action>
-  <action>Include a Mermaid API flow diagram showing request lifecycle (client → middleware → handler → response)</action>
-  <action>List undocumented endpoints as gaps</action>
-  <template-output file="{planning_artifacts}/api-documentation.md">
-    Generate API documentation following the api-documentation-template. Include the OpenAPI spec (validated existing or generated), endpoint inventory table, authentication details, error format, Mermaid API flow diagram, and gap list. All API docs must be in Swagger/OpenAPI format.
-  </template-output>
+<step n="2" title="Parallel Documentation Subagents">
+  <action>Spawn subagents in parallel using the Agent tool with multiple calls in a single message. Only spawn subagents for detected capabilities.</action>
+  <action>If {has_apis}: spawn subagent — "Scan the codebase at {project-root} for API routes, controllers, and OpenAPI/Swagger specs. Read {installed_path}/../../templates/api-documentation-template.md for the output format. Check if an OpenAPI spec file already exists — if so, validate it against actual routes; if not, generate an OpenAPI 3.x spec from code. Document all endpoints (method, path, handler, auth, parameters, request/response schemas, error formats). Include a Mermaid API flow diagram. List undocumented endpoints as gaps. All API docs must use Swagger/OpenAPI format. Output to {planning_artifacts}/api-documentation.md"</action>
+  <action>If {has_frontend}: spawn subagent — "Scan the codebase at {project-root} for UI frameworks, components, design patterns, and styling. Read {installed_path}/../../templates/ux-design-assessment-template.md for the output format. Document existing UI patterns, navigation structure (Mermaid sitemap), interaction patterns, accessibility (WCAG compliance, ARIA, keyboard nav). Identify UX gaps — propose improvements for gaps only, not redesign of working patterns. Output to {planning_artifacts}/ux-design.md"</action>
+  <action>If {has_events}: spawn subagent — "Scan the codebase at {project-root} for messaging patterns (Kafka, RabbitMQ, SNS-SQS, Redis pub-sub, NATS). Read {installed_path}/../../templates/event-catalog-template.md for the output format. Document messaging infrastructure, produced/consumed events with schemas, external events, delivery guarantees (retry, DLQ, idempotency). Include Mermaid event flow diagrams for 2-3 key flows. Output to {planning_artifacts}/event-catalog.md"</action>
+  <action>Spawn subagent (always) — "Scan the codebase at {project-root} for external dependencies. Read {installed_path}/../../templates/dependency-map-template.md for the output format. Document external service dependencies (APIs consumed, auth, health checks), infrastructure dependencies (databases, caches, queues), key library dependencies (ORM, auth lib — check version currency and CVE risk). Create Mermaid dependency graph. Document contracts, SLAs, and fallback strategies. Identify dependency risks. Output to {planning_artifacts}/dependency-map.md. Then load {project-root}/_gaia/core/tasks/review-dependency-audit.xml, read its entire contents, and follow the flow steps EXACTLY to generate a dependency audit report."</action>
+  <action>Wait for all subagents to complete. Verify each expected output file exists: dependency-map.md (always), api-documentation.md (if has_apis), ux-design.md (if has_frontend), event-catalog.md (if has_events), dependency-audit-{date}.md (always).</action>
 </step>
 
-<step n="3" title="UX Design Assessment" optional="true" condition="{has_frontend} == true">
-  <action>Skip this step if {has_frontend} is false. Log: "No frontend detected — skipping UX design assessment."</action>
-  <action>Read the UX design assessment template from {installed_path}/../../templates/ux-design-assessment-template.md</action>
-  <action>Document existing UI patterns: component library, design system, layout patterns, styling approach</action>
-  <action>Document navigation structure with a Mermaid sitemap diagram</action>
-  <action>Document interaction patterns: forms, modals, notifications, error handling, loading states</action>
-  <action>Assess accessibility: WCAG compliance level, ARIA usage, keyboard navigation, screen reader support</action>
-  <action>Identify UX gaps: missing responsive design, inconsistent patterns, accessibility violations</action>
-  <action>Propose UX improvements for gap features only — do not redesign working patterns</action>
-  <template-output file="{planning_artifacts}/ux-design.md">
-    Generate UX design assessment following the ux-design-assessment-template. Include existing patterns, Mermaid navigation sitemap, interaction patterns, accessibility assessment, gap analysis, and proposed improvements for gaps only.
-  </template-output>
+<step n="3" title="NFR Assessment &amp; Performance Test Plan">
+  <action>Spawn a subagent — "Analyze the codebase at {project-root} for non-functional requirements. Read {installed_path}/../../templates/nfr-assessment-template.md for the output format. Assess: code quality (linting, complexity, duplication), security posture (dependency vulnerabilities, secrets handling, auth quality — load security-basics skill section vulnerability-scanning if needed), performance (bundle size if frontend, query patterns, caching, resource management), accessibility (ARIA, semantic HTML, keyboard nav if frontend), test coverage (framework, count, coverage %, untested areas, quality), CI/CD (build pipeline, deploy strategy, environments, IaC). Create NFR Baseline Summary Table with measured values (not placeholders). Output to {test_artifacts}/nfr-assessment.md. Then create a performance test plan: load {project-root}/_gaia/testing/knowledge/performance/k6-patterns.md for load testing patterns. If {has_frontend}: also load {project-root}/_gaia/testing/knowledge/performance/lighthouse-ci.md. Define performance budgets (P50/P95/P99) based on NFR baselines, load test scenarios (gradual, spike, soak), backend profiling targets (slow queries, N+1, connection pools), CI performance gates. If {has_frontend}: define Core Web Vitals targets (LCP under 2.5s, INP under 200ms, CLS under 0.1). Output to {test_artifacts}/performance-test-plan-{date}.md"</action>
+  <action>When subagent returns: verify both {test_artifacts}/nfr-assessment.md and {test_artifacts}/performance-test-plan-{date}.md exist.</action>
 </step>
 
-<step n="4" title="Event &amp; Messaging Catalog" optional="true" condition="{has_events} == true">
-  <action>Skip this step if {has_events} is false. Log: "No event/messaging system detected — skipping event catalog."</action>
-  <action>Read the event catalog template from {installed_path}/../../templates/event-catalog-template.md</action>
-  <action>Document messaging infrastructure: system type, client library, configuration, serialization</action>
-  <action>Document produced events: event name, topic/queue, schema, trigger, publisher module</action>
-  <action>Document consumed events: event name, topic/queue, handler, error handling, consumer module</action>
-  <action>Document external events consumed from or produced for other services</action>
-  <action>Document delivery guarantees: at-least-once/at-most-once/exactly-once, retry policy, DLQ, idempotency</action>
-  <action>Include Mermaid event flow diagrams for 2-3 key event-driven flows</action>
-  <template-output file="{planning_artifacts}/event-catalog.md">
-    Generate event catalog following the event-catalog-template. Include messaging infrastructure, produced/consumed event tables, external events, delivery guarantees, and Mermaid event flow diagrams.
-  </template-output>
-</step>
-
-<step n="5" title="Dependency Map">
-  <action>Read the dependency map template from {installed_path}/../../templates/dependency-map-template.md</action>
-  <action>Document external service dependencies: APIs consumed, auth mechanism, health checks, error handling</action>
-  <action>Document infrastructure dependencies: databases, caches, search engines, storage, message queues</action>
-  <action>Document key library dependencies: ORM, auth lib, state management — check version currency and CVE risk</action>
-  <action>Create a Mermaid dependency graph showing the application and all its dependencies</action>
-  <action>Document contracts, SLAs, and fallback strategies where applicable</action>
-  <action>Identify dependency risks: outdated versions, missing health checks, single points of failure</action>
-  <template-output file="{planning_artifacts}/dependency-map.md">
-    Generate dependency map following the dependency-map-template. Include external service table, infrastructure table, key library table with CVE risk, Mermaid dependency graph, contracts/SLAs, and risk recommendations.
-  </template-output>
-  <action>Spawn a subagent using the Agent tool: "Load {project-root}/_gaia/core/tasks/review-dependency-audit.xml. Read its entire contents. Follow the flow steps EXACTLY. Generate dependency audit report." This is required — the report feeds into the PRD gap analysis.</action>
-  <action>When subagent returns: verify dependency-audit-{date}.md exists in {planning_artifacts}/</action>
-</step>
-
-<step n="6" title="NFR Assessment &amp; Baselines">
-  <action>Read the NFR assessment template from {installed_path}/../../templates/nfr-assessment-template.md</action>
-  <action>Code quality: check for linting config, measure complexity hotspots, identify duplication patterns</action>
-  <action>Security posture: check dependency vulnerabilities, secrets handling, auth quality. Load security-basics skill JIT if needed (section: vulnerability-scanning)</action>
-  <action>Performance: assess bundle size (if frontend), query patterns, caching strategy, resource management</action>
-  <action>Accessibility: check ARIA usage, semantic HTML, keyboard navigation, a11y tooling (if frontend exists)</action>
-  <action>Test coverage: identify framework, count tests, check coverage %, find untested areas, assess test quality</action>
-  <action>CI/CD: document build pipeline, deploy strategy, environment management, infrastructure as code</action>
-  <action>Create NFR Baseline Summary Table with: category | current baseline | recommended target | gap severity</action>
-  <template-output file="{test_artifacts}/nfr-assessment.md">
-    Generate NFR assessment following the nfr-assessment-template. Output to {test_artifacts}/nfr-assessment.md — this is the canonical location. Include code quality baselines, security posture, performance baselines, accessibility status, test coverage baselines, CI/CD assessment, and the NFR baseline summary table with measured values (not placeholders).
-  </template-output>
-</step>
-
-<step n="7" title="Performance Test Plan">
-  <action>REQUIRED for brownfield — create performance test plan</action>
-  <action>Load testing/knowledge/performance/k6-patterns.md for load testing patterns</action>
-  <action>Load testing/knowledge/performance/lighthouse-ci.md if {has_frontend} is true</action>
-  <action>Define performance budgets: P50/P95/P99 latency targets based on nfr-assessment.md baselines</action>
-  <action>Design load test scenarios: gradual load, spike test, soak test</action>
-  <action>If {has_frontend}: define Core Web Vitals targets (LCP under 2.5s, INP under 200ms, CLS under 0.1)</action>
-  <action>Identify backend profiling targets: slow queries, N+1 problems, connection pool sizing</action>
-  <action>Define CI performance gates with pass/fail thresholds</action>
-  <template-output file="{test_artifacts}/performance-test-plan-{date}.md">
-    Generate performance test plan. Include: performance budgets derived from nfr-assessment.md baselines, load test scenarios (gradual, spike, soak), frontend performance targets (if has_frontend), backend profiling targets, and CI performance gate definitions.
-  </template-output>
-</step>
-
-<step n="8" title="Create PRD for Gaps">
+<step n="4" title="Create PRD for Gaps">
   <action>Read the PRD template from {installed_path}/../../templates/prd-template.md</action>
   <action>Read upstream artifacts to inform gap analysis:</action>
   <action>— nfr-assessment.md → NFR section gets real "Current Baseline" and "Target" columns</action>
@@ -128,7 +57,7 @@
   </template-output>
 </step>
 
-<step n="9" title="Adversarial Review &amp; PRD Refinement">
+<step n="5" title="Adversarial Review &amp; PRD Refinement">
   <action>Spawn a subagent using the Agent tool: "Load {project-root}/_gaia/core/tasks/review-adversarial.xml. Read its entire contents. Target: {planning_artifacts}/prd.md. Follow the task instructions EXACTLY." This is required — findings will be incorporated back into the PRD.</action>
   <action>When subagent returns: verify adversarial-review-{date}.md exists in {planning_artifacts}/</action>
   <action>Read {planning_artifacts}/adversarial-review-{date}.md — extract critical and high severity findings</action>
@@ -139,8 +68,8 @@
   </template-output>
 </step>
 
-<step n="10" title="Architecture">
-  <action>Architecture is created using the Phase 3 workflow which auto-detects brownfield mode from the PRD "Mode: Brownfield" header set in step 8.</action>
+<step n="6" title="Architecture">
+  <action>Architecture is created using the Phase 3 workflow which auto-detects brownfield mode from the PRD "Mode: Brownfield" header set in step 4.</action>
   <action>Spawn a subagent using the Agent tool: "Load {project-root}/_gaia/core/engine/workflow.xml, then process {project-root}/_gaia/lifecycle/workflows/3-solutioning/create-architecture/workflow.yaml as workflow-config. Run in YOLO mode. Follow the workflow engine instructions EXACTLY." When subagent returns: verify {planning_artifacts}/architecture.md exists.</action>
   <action>Epics and stories require a test plan first. The remaining Phase 3 sequence (/gaia-test-design → /gaia-create-epics → /gaia-readiness-check) must be run after this workflow completes.</action>
 </step>
