@@ -119,8 +119,8 @@
   </template-output>
 </step>
 <step n="11" title="Optional: Adversarial Review">
-  <ask>Would you like to run an adversarial review on the readiness report and all planning artifacts? Open a new Claude Code terminal and run /gaia-adversarial — it runs in a separate context to preserve this session's budget. This is the last opportunity to catch flaws before implementation begins. Strongly recommended before committing to build. (yes, I'll open a new terminal / skip)</ask>
-  <action>If yes: the user opens a new terminal and runs /gaia-adversarial targeting {planning_artifacts}/readiness-report.md (reviewer will pull in referenced artifacts). Wait for confirmation before proceeding.</action>
-  <action>If skip: adversarial review can be run anytime later with /gaia-adversarial in a separate terminal</action>
+  <ask>Would you like to run an adversarial review on the readiness report? This spawns a subagent in a separate context. Strongly recommended before committing to build. (yes / skip)</ask>
+  <action>If yes: spawn a subagent using the Agent tool: "Load {project-root}/_gaia/core/tasks/review-adversarial.xml. Read its entire contents. Target: {planning_artifacts}/readiness-report.md. Follow the task instructions EXACTLY."</action>
+  <action>If skip: adversarial review can be run anytime later with /gaia-adversarial</action>
 </step>
 </workflow>

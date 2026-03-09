@@ -66,13 +66,13 @@
   </template-output>
 </step>
 <step n="10" title="Optional: API Design Review">
-  <ask>Would you like to review the API design against REST standards? Open a new Claude Code terminal and run /gaia-review-api — it runs in a separate context to preserve this session's budget. It will check naming conventions, HTTP methods, status codes, versioning, pagination, and error formats. Recommended if your architecture includes APIs. (yes, I'll open a new terminal / skip)</ask>
-  <action>If yes: the user opens a new terminal and runs /gaia-review-api targeting the API Design section of {planning_artifacts}/architecture.md. Wait for confirmation before proceeding.</action>
-  <action>If skip: API review can be run anytime later with /gaia-review-api in a separate terminal</action>
+  <ask>Would you like to review the API design against REST standards? This spawns a subagent in a separate context. Recommended if your architecture includes APIs. (yes / skip)</ask>
+  <action>If yes: spawn a subagent using the Agent tool: "Load {project-root}/_gaia/core/tasks/review-api-design.xml. Read its entire contents. Target: {planning_artifacts}/architecture.md. Follow the flow steps EXACTLY. Generate API design findings report."</action>
+  <action>If skip: API review can be run anytime later with /gaia-review-api</action>
 </step>
 <step n="11" title="Adversarial Review">
-  <ask>Open a new Claude Code terminal and run /gaia-adversarial targeting {planning_artifacts}/architecture.md. This is required — findings will be incorporated back into the architecture document. Confirm here once it completes. (ok)</ask>
-  <action>Wait for user to confirm adversarial-review-{date}.md exists in {planning_artifacts}/</action>
+  <action>Spawn a subagent using the Agent tool: "Load {project-root}/_gaia/core/tasks/review-adversarial.xml. Read its entire contents. Target: {planning_artifacts}/architecture.md. Follow the task instructions EXACTLY." This is required — findings will be incorporated back into the architecture document.</action>
+  <action>When subagent returns: verify adversarial-review-{date}.md exists in {planning_artifacts}/</action>
 </step>
 <step n="12" title="Incorporate Adversarial Findings">
   <action>Read the most recent {planning_artifacts}/adversarial-review-{date}.md — extract critical and high severity findings relevant to architecture</action>

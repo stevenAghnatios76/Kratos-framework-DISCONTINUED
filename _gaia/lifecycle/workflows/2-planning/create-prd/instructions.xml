@@ -57,8 +57,8 @@
   </template-output>
 </step>
 <step n="12" title="Adversarial Review">
-  <ask>Open a new Claude Code terminal and run /gaia-adversarial targeting {planning_artifacts}/prd.md. This is required — findings will be incorporated back into the PRD. Confirm here once it completes. (ok)</ask>
-  <action>Wait for user to confirm adversarial-review-{date}.md exists in {planning_artifacts}/</action>
+  <action>Spawn a subagent using the Agent tool: "Load {project-root}/_gaia/core/tasks/review-adversarial.xml. Read its entire contents. Target: {planning_artifacts}/prd.md. Follow the task instructions EXACTLY." This is required — findings will be incorporated back into the PRD.</action>
+  <action>When subagent returns: verify adversarial-review-{date}.md exists in {planning_artifacts}/</action>
 </step>
 <step n="13" title="Incorporate Adversarial Findings">
   <action>Read {planning_artifacts}/adversarial-review-{date}.md — extract critical and high severity findings</action>

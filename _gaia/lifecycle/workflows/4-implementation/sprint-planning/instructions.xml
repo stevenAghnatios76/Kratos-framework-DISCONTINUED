@@ -10,9 +10,9 @@
 <step n="2" title="Optional: Memory Hygiene Check" optional="true">
   <action>Check if any sidecar directories under _gaia/_memory/*-sidecar/ contain content beyond their template header</action>
   <check if="any sidecars have content">
-    <ask>Agent memory sidecars contain decisions from previous sessions. Would you like to run /gaia-memory-hygiene to check for stale or contradicted entries before sprint planning? Open a new Claude Code terminal and run /gaia-memory-hygiene. Recommended if architecture or requirement changes occurred since last sprint. (yes, I'll open a new terminal / skip)</ask>
-    <action>If yes: the user opens a new terminal and runs /gaia-memory-hygiene. Wait for confirmation before proceeding.</action>
-    <action>If skip: memory hygiene can be run anytime with /gaia-memory-hygiene in a separate terminal</action>
+    <ask>Agent memory sidecars contain decisions from previous sessions. Would you like to run memory hygiene? This spawns a subagent in a separate context. Recommended if architecture or requirement changes occurred since last sprint. (yes / skip)</ask>
+    <action>If yes: spawn a subagent using the Agent tool: "Load {project-root}/_gaia/core/engine/workflow.xml, then process {project-root}/_gaia/lifecycle/workflows/anytime/memory-hygiene/workflow.yaml as workflow-config. Run in YOLO mode. Follow the workflow engine instructions EXACTLY."</action>
+    <action>If skip: memory hygiene can be run anytime with /gaia-memory-hygiene</action>
   </check>
   <check if="no sidecars have content">Skip — no sidecar data to review.</check>
 </step>
@@ -29,9 +29,9 @@
   <action>Flag any high-risk story that does not have a corresponding {test_artifacts}/atdd-{story_key}.md file — add a sprint risk note</action>
 </step>
 <step n="5" title="Optional: Mobile Testing">
-  <ask>Would you like to create a mobile test plan? Open a new Claude Code terminal and run /gaia-mobile-testing — it runs in a separate context to preserve this session's budget. It will define the device matrix, configure Appium infrastructure, set up React Native testing patterns, and design responsive viewport tests. Recommended for mobile or responsive applications. (yes, I'll open a new terminal / skip)</ask>
-  <action>If yes: the user opens a new terminal and runs /gaia-mobile-testing. Wait for confirmation before proceeding.</action>
-  <action>If skip: mobile testing can be set up anytime later with /gaia-mobile-testing in a separate terminal</action>
+  <ask>Would you like to create a mobile test plan? This spawns a subagent in a separate context. Recommended for mobile or responsive applications. (yes / skip)</ask>
+  <action>If yes: spawn a subagent using the Agent tool: "Load {project-root}/_gaia/core/engine/workflow.xml, then process {project-root}/_gaia/testing/workflows/mobile-testing/workflow.yaml as workflow-config. Run in YOLO mode. Follow the workflow engine instructions EXACTLY."</action>
+  <action>If skip: mobile testing can be set up anytime later with /gaia-mobile-testing</action>
 </step>
 <step n="6" title="Sprint Plan Generation">
   <action>Create sprint plan with story assignments and execution order</action>

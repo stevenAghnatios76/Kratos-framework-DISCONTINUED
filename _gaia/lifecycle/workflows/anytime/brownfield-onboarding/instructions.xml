@@ -75,8 +75,8 @@
   <template-output file="{planning_artifacts}/dependency-map.md">
     Generate dependency map following the dependency-map-template. Include external service table, infrastructure table, key library table with CVE risk, Mermaid dependency graph, contracts/SLAs, and risk recommendations.
   </template-output>
-  <ask>Open a new Claude Code terminal and run /gaia-review-deps to audit dependencies for outdated versions, known CVEs, license conflicts, and unused packages. This is required — the report feeds into the PRD gap analysis. Confirm here once it completes. (ok)</ask>
-  <action>Wait for user to confirm dependency-audit-{date}.md exists in {planning_artifacts}/</action>
+  <action>Spawn a subagent using the Agent tool: "Load {project-root}/_gaia/core/tasks/review-dependency-audit.xml. Read its entire contents. Follow the flow steps EXACTLY. Generate dependency audit report." This is required — the report feeds into the PRD gap analysis.</action>
+  <action>When subagent returns: verify dependency-audit-{date}.md exists in {planning_artifacts}/</action>
 </step>
 
 <step n="6" title="NFR Assessment &amp; Baselines">
@@ -129,8 +129,8 @@
 </step>
 
 <step n="9" title="Adversarial Review &amp; PRD Refinement">
-  <ask>Open a new Claude Code terminal and run /gaia-adversarial targeting {planning_artifacts}/prd.md. This is required — findings will be incorporated back into the PRD. Confirm here once it completes. (ok)</ask>
-  <action>Wait for user to confirm adversarial-review-{date}.md exists in {planning_artifacts}/</action>
+  <action>Spawn a subagent using the Agent tool: "Load {project-root}/_gaia/core/tasks/review-adversarial.xml. Read its entire contents. Target: {planning_artifacts}/prd.md. Follow the task instructions EXACTLY." This is required — findings will be incorporated back into the PRD.</action>
+  <action>When subagent returns: verify adversarial-review-{date}.md exists in {planning_artifacts}/</action>
   <action>Read {planning_artifacts}/adversarial-review-{date}.md — extract critical and high severity findings</action>
   <action>For each critical/high finding: add as a new requirement or refine an existing requirement in the PRD</action>
   <action>Add a "## Review Findings Incorporated" section to the PRD listing each finding, its severity, and how it was addressed</action>
@@ -141,8 +141,8 @@
 
 <step n="10" title="Architecture, Stories &amp; Onboarding">
   <action>Architecture and stories are created using the Phase 3 workflows which auto-detect brownfield mode from the PRD "Mode: Brownfield" header set in step 8.</action>
-  <ask>Open a new Claude Code terminal and run /gaia-create-arch to generate the brownfield architecture document (as-is C4 diagrams + target for gaps + delta table + migration strategy). It auto-detects brownfield mode from the PRD header. Confirm here once it completes. (ok)</ask>
-  <ask>Open a new Claude Code terminal and run /gaia-create-epics to generate gap-only stories with risk levels, dependency topology, and priority ordering. This will also generate the brownfield-onboarding.md knowledge base. Confirm here once it completes. (ok)</ask>
+  <action>Spawn a subagent using the Agent tool: "Load {project-root}/_gaia/core/engine/workflow.xml, then process {project-root}/_gaia/lifecycle/workflows/3-solutioning/create-architecture/workflow.yaml as workflow-config. Run in YOLO mode. Follow the workflow engine instructions EXACTLY." When subagent returns: verify {planning_artifacts}/architecture.md exists.</action>
+  <action>Spawn a subagent using the Agent tool: "Load {project-root}/_gaia/core/engine/workflow.xml, then process {project-root}/_gaia/lifecycle/workflows/3-solutioning/create-epics-stories/workflow.yaml as workflow-config. Run in YOLO mode. Follow the workflow engine instructions EXACTLY." When subagent returns: verify {planning_artifacts}/epics-and-stories.md and {planning_artifacts}/brownfield-onboarding.md exist.</action>
 </step>
 <next-step command="/gaia-readiness-check">
   Run /gaia-readiness-check in the Claude Code terminal to validate implementation readiness before starting development.

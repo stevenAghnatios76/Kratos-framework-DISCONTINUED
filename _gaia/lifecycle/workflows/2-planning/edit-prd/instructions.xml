@@ -25,7 +25,8 @@
   </template-output>
 </step>
 <step n="5" title="Adversarial Review">
-  <ask>The PRD has been updated. Open a new Claude Code terminal and run /gaia-adversarial targeting {planning_artifacts}/prd.md. Recommended for significant changes. Confirm here once complete, or type 'skip' for minor edits. (ok / skip)</ask>
+  <ask>The PRD has been updated. Would you like to run an adversarial review? This spawns a subagent in a separate context — recommended for significant changes. (yes / skip for minor edits)</ask>
+  <action>If yes: spawn a subagent using the Agent tool: "Load {project-root}/_gaia/core/tasks/review-adversarial.xml. Read its entire contents. Target: {planning_artifacts}/prd.md. Follow the task instructions EXACTLY."</action>
   <action>If skip: proceed to step 7 — mark "Review Findings Incorporated" as "Incremental edit — adversarial review skipped (minor change)"</action>
   <action>If ok: wait for user to confirm adversarial-review-{date}.md exists</action>
 </step>
