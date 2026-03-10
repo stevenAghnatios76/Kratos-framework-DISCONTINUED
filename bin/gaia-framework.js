@@ -12,10 +12,34 @@ const { tmpdir } = require("os");
 
 const REPO_URL = "https://github.com/jlouage/Gaia-framework.git";
 const SCRIPT_NAME = "gaia-install.sh";
+const IS_WINDOWS = process.platform === "win32";
 
 let tempDir = null;
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
+
+function findBash() {
+  if (!IS_WINDOWS) return "bash";
+
+  // Try bash in PATH first (WSL, Git Bash in PATH, etc.)
+  try {
+    execSync("bash --version", { stdio: "ignore" });
+    return "bash";
+  } catch {}
+
+  // Try Git for Windows default locations
+  const gitBashPaths = [
+    join(process.env.ProgramFiles || "C:\\Program Files", "Git", "bin", "bash.exe"),
+    join(process.env["ProgramFiles(x86)"] || "C:\\Program Files (x86)", "Git", "bin", "bash.exe"),
+    join(process.env.LOCALAPPDATA || "", "Programs", "Git", "bin", "bash.exe"),
+  ];
+
+  for (const p of gitBashPaths) {
+    if (existsSync(p)) return p;
+  }
+
+  return null;
+}
 
 function fail(message) {
   console.error(`\x1b[31m✖\x1b[0m  ${message}`);
@@ -135,10 +159,20 @@ function main() {
   // Insert --source right after the command
   passthrough.splice(1, 0, "--source", tempDir);
 
+  // Locate bash (critical for Windows support)
+  const bashPath = findBash();
+  if (!bashPath) {
+    fail(
+      "bash is required but was not found.\n" +
+        "   On Windows, install Git for Windows (https://git-scm.com/downloads/win)\n" +
+        "   which includes bash. Then re-run this command."
+    );
+  }
+
   info("Running installer...\n");
 
   try {
-    execFileSync("bash", [scriptPath, ...passthrough], {
+    execFileSync(bashPath, [scriptPath, ...passthrough], {
       stdio: "inherit",
       env: { ...process.env, GAIA_SOURCE: tempDir },
     });
