@@ -10,6 +10,7 @@ docs/phases/
 
 # Node
 node_modules/
+dashboard/node_modules/
 
 # OS
 .DS_Store

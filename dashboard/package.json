@@ -1,0 +1,12 @@
+{
+  "name": "gaia-dashboard",
+  "version": "1.0.0",
+  "description": "Live Claude Code usage tracking dashboard for GAIA Framework",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

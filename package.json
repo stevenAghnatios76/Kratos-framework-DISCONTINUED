@@ -19,6 +19,9 @@
     "url": "https://github.com/jlouage/Gaia-framework.git"
   },
   "license": "AGPL-3.0",
+  "scripts": {
+    "dashboard": "cd dashboard && npm install && npm start"
+  },
   "engines": {
     "node": ">=18"
   },
