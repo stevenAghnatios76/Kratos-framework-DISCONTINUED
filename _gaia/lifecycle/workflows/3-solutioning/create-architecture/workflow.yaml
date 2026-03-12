@@ -23,6 +23,9 @@ input_file_patterns:
   project_documentation:
     whole: "{planning_artifacts}/project-documentation.md"
     load_strategy: "INDEX_GUIDED"
+  threat_model:
+    whole: "{planning_artifacts}/threat-model.md"
+    load_strategy: "INDEX_GUIDED"
 quality_gates:
   pre_start:
     - check: "prd_exists"

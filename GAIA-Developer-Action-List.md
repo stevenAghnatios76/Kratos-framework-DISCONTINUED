@@ -30,9 +30,9 @@
 | H. Run-All-Reviews Cluster | 5 | 5 | 0 |
 | I. Artifact Wiring Gaps (Issue Report) | 18 | 18 | 0 |
 | J. Individual High-Severity Bugs | 8 | 6 | 2 |
-| K. Individual Medium-Severity Bugs | 28 | 7 | 21 |
+| K. Individual Medium-Severity Bugs | 28 | 8 | 20 |
 | L. Individual Low-Severity Bugs | 18 | 0 | 18 |
-| **TOTAL** | **122** | **79** | **43** |
+| **TOTAL** | **122** | **80** | **42** |
 
 > BUG-073 is already closed — not counted above.
 
@@ -403,8 +403,8 @@ Bugs not already covered in systemic groups.
 - [x] **BUG-020** (Medium) — `/gaia-create-arch` doesn't consider existing codebase (brownfield)
   - Fix: Added brownfield_assessment and project_documentation to workflow.yaml input_file_patterns. Step 1 loads brownfield artifacts if they exist regardless of PRD mode. Step 3 references existing tech stack from brownfield analysis when available.
 
-- [ ] **BUG-021** (Medium) — `/gaia-create-arch` security section thin
-  - Fix: Cross-reference with threat-model output if available; otherwise prompt for security requirements
+- [x] **BUG-021** (Medium) — `/gaia-create-arch` security section thin
+  - Fix: Added threat_model to workflow.yaml input_file_patterns. Step 1 loads threat-model.md if available. Step 7 adds security architecture action that cross-references threat model findings or prompts for security requirements if no threat model exists.
 
 - [ ] **BUG-022** (Medium) — `/gaia-create-arch` no ADR (Architecture Decision Record) format
   - Fix: Output architecture decisions as ADRs with Status, Context, Decision, Consequences
