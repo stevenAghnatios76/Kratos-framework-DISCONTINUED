@@ -3,6 +3,7 @@ name,code,command,description,agent
 "market-research","market-research","gaia-market-research","Conduct market research","analyst"
 "domain-research","domain-research","gaia-domain-research","Research a domain or industry","analyst"
 "technical-research","tech-research","gaia-tech-research","Research a technology","analyst"
+"advanced-elicitation","advanced-elicitation","gaia-advanced-elicitation","Deep requirements elicitation","orchestrator"
 "create-product-brief","product-brief","gaia-product-brief","Create a product brief","analyst"
 "create-prd","create-prd","gaia-create-prd","Create a PRD","pm"
 "validate-prd","validate-prd","gaia-validate-prd","Validate PRD against standards","pm"

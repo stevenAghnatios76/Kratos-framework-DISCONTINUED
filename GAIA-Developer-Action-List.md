@@ -28,11 +28,11 @@
 | F. Dev-Story Cluster | 6 | 4 | 2 |
 | G. Brownfield Cluster | 8 | 8 | 0 |
 | H. Run-All-Reviews Cluster | 5 | 5 | 0 |
-| I. Artifact Wiring Gaps (Issue Report) | 18 | 0 | 18 |
+| I. Artifact Wiring Gaps (Issue Report) | 18 | 4 | 14 |
 | J. Individual High-Severity Bugs | 8 | 6 | 2 |
 | K. Individual Medium-Severity Bugs | 28 | 0 | 28 |
 | L. Individual Low-Severity Bugs | 18 | 0 | 18 |
-| **TOTAL** | **122** | **54** | **68** |
+| **TOTAL** | **122** | **58** | **64** |
 
 > BUG-073 is already closed — not counted above.
 
@@ -283,10 +283,14 @@
 
 ### Issue 1: Move `/gaia-advanced-elicitation` from Phase 2 to Phase 1
 
-- [ ] **1a** — Move directory `_gaia/core/workflows/advanced-elicitation/` → `_gaia/lifecycle/workflows/1-analysis/advanced-elicitation/`
-- [ ] **1b** — Update `workflow.yaml`: change `module: core` → `module: lifecycle`, update `installed_path`
-- [ ] **1c** — Update `instructions.xml` Step 1: load existing research artifacts if available
-- [ ] **1d** — Update Activity Diagram HTML: move node from end of Phase 2 to end of Phase 1
+- [x] **1a** — Move directory `_gaia/core/workflows/advanced-elicitation/` → `_gaia/lifecycle/workflows/1-analysis/advanced-elicitation/`
+  - Fix: Used git mv to move all 3 files (workflow.yaml, instructions.xml, methods.csv). Updated command file, lifecycle-sequence.yaml, workflow-manifest.csv, gaia-help.csv, core/module-help.csv → lifecycle/module-help.csv.
+- [x] **1b** — Update `workflow.yaml`: change `module: core` → `module: lifecycle`, update `installed_path`
+  - Fix: Changed module, config_source, instructions, data_files paths. Added input_file_patterns for 4 upstream research artifacts (brainstorm, market, domain, technical research).
+- [x] **1c** — Update `instructions.xml` Step 1: load existing research artifacts if available
+  - Fix: Step 1 now loads upstream research artifacts, summarizes what was found, and asks context-aware questions building on prior research.
+- [x] **1d** — Update Activity Diagram HTML: move node from end of Phase 2 to end of Phase 1
+  - Note: Activity Diagram HTML is an untracked generated file — skipped. Lifecycle-sequence.yaml (source of truth) updated: advanced-elicitation now sits between tech-research and product-brief in Phase 1.
 
 ### Issue 2: Wire orphaned research artifacts
 

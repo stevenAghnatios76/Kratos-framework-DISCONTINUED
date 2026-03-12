@@ -4,7 +4,7 @@ module,phase,name,code,command,required,agent-name,description,output-location
 "core","anytime","build-configs","build-configs","gaia-build-configs","false","orchestrator","Regenerate resolved configs","n/a"
 "core","anytime","brainstorming","brainstorming","gaia-brainstorming","false","orchestrator","Facilitated brainstorming session","docs/creative-artifacts"
 "core","anytime","party-mode","party-mode","gaia-party","false","orchestrator","Multi-agent group discussion","n/a"
-"core","anytime","advanced-elicitation","advanced-elicitation","gaia-advanced-elicitation","false","orchestrator","Deep requirements elicitation","docs/planning-artifacts"
+"lifecycle","1-analysis","advanced-elicitation","advanced-elicitation","gaia-advanced-elicitation","false","orchestrator","Deep requirements elicitation","docs/planning-artifacts"
 "lifecycle","1-analysis","brainstorm-project","brainstorm","gaia-brainstorm","false","analyst","Brainstorm a new project idea","docs/planning-artifacts"
 "lifecycle","1-analysis","market-research","market-research","gaia-market-research","false","analyst","Conduct market research","docs/planning-artifacts"
 "lifecycle","1-analysis","domain-research","domain-research","gaia-domain-research","false","analyst","Research a domain or industry","docs/planning-artifacts"

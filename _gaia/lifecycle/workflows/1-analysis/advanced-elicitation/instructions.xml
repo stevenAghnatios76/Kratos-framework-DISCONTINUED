@@ -5,9 +5,11 @@
   <mandate>Distinguish between stated needs, implied needs, and assumed needs</mandate>
 </critical>
 <step n="1" title="Context Gathering">
-  <ask>What product or feature do you need to elicit requirements for?</ask>
+  <action>Load upstream research artifacts if available: project-brainstorm.md, market-research.md, domain-research.md, technical-research.md</action>
+  <action>Summarize what upstream context was found — present key themes, target users, market insights, and technical constraints already discovered</action>
+  <ask>Based on the research so far, what product or feature area do you want to explore deeper? (Or describe from scratch if no prior research exists)</ask>
   <ask>Who are the key stakeholders?</ask>
-  <ask>What existing documentation is available (PRD, briefs, notes)?</ask>
+  <ask>Are there specific requirements gaps or assumptions from the research that you want to validate?</ask>
 </step>
 <step n="2" title="Method Selection">
   <action>Load methods.csv to show available elicitation techniques</action>

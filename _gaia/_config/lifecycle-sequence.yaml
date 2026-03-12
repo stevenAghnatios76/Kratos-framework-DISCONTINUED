@@ -43,10 +43,20 @@ sequence:
     phase: 1-analysis
     command: /gaia-tech-research
     next:
+      primary: /gaia-advanced-elicitation
+      alternatives:
+        - command: /gaia-product-brief
+          context: "If skipping advanced elicitation — go directly to product brief"
+
+  advanced-elicitation:
+    phase: 1-analysis
+    module: lifecycle
+    command: /gaia-advanced-elicitation
+    next:
       primary: /gaia-product-brief
       alternatives:
-        - command: /gaia-advanced-elicitation
-          context: "If deeper requirements exploration is needed (optional)"
+        - command: /gaia-create-prd
+          context: "If product brief already exists"
 
   create-product-brief:
     phase: 1-analysis
@@ -342,17 +352,6 @@ sequence:
     next:
       standalone: true
       note: "Return to current lifecycle phase"
-
-  advanced-elicitation:
-    module: core
-    command: /gaia-advanced-elicitation
-    next:
-      standalone: true
-      suggestions:
-        - command: /gaia-product-brief
-          context: "To consolidate elicited requirements into a product brief"
-        - command: /gaia-create-prd
-          context: "If product brief already exists"
 
   # -- Lifecycle anytime --
   brownfield-onboarding:

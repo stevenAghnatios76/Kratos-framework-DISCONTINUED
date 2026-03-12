@@ -1,7 +1,6 @@
 name,code,command,description,agent
 "brainstorming","brainstorming","gaia-brainstorming","Facilitated brainstorming session","orchestrator"
 "party-mode","party-mode","gaia-party","Multi-agent group discussion","orchestrator"
-"advanced-elicitation","advanced-elicitation","gaia-advanced-elicitation","Deep requirements elicitation","orchestrator"
 "help","help","gaia-help","Context-sensitive help and routing","orchestrator"
 "resume","resume","gaia-resume","Resume from last checkpoint","orchestrator"
 "build-configs","build-configs","gaia-build-configs","Regenerate resolved configs","orchestrator"

@@ -1,0 +1,33 @@
+# Advanced Elicitation Workflow
+# Deep requirements elicitation using structured questioning techniques
+# Phase 1 (Analysis) — optional deep-dive after research, before product brief
+
+name: advanced-elicitation
+display_name: "Advanced Requirements Elicitation"
+description: "Deep requirements elicitation using structured questioning techniques"
+module: lifecycle
+agent: orchestrator
+
+config_source: "{installed_path}/lifecycle/config.yaml"
+
+instructions: "{installed_path}/lifecycle/workflows/1-analysis/advanced-elicitation/instructions.xml"
+
+input_file_patterns:
+  brainstorm:
+    whole: "{planning_artifacts}/project-brainstorm.md"
+    load_strategy: "FULL_LOAD"
+  market_research:
+    whole: "{planning_artifacts}/market-research.md"
+    load_strategy: "FULL_LOAD"
+  domain_research:
+    whole: "{planning_artifacts}/domain-research.md"
+    load_strategy: "FULL_LOAD"
+  technical_research:
+    whole: "{planning_artifacts}/technical-research.md"
+    load_strategy: "FULL_LOAD"
+
+output:
+  primary: "{planning_artifacts}/elicitation-report-{date}.md"
+
+data_files:
+  methods: "{installed_path}/lifecycle/workflows/1-analysis/advanced-elicitation/methods.csv"
