@@ -12,7 +12,7 @@ validation-target: 'Brownfield onboarding output'
 - [ ] Brownfield assessment generated at {planning_artifacts}/brownfield-assessment.md
 ## Step 2: Parallel Documentation Subagents
 - [ ] Dependency map subagent completed — {planning_artifacts}/dependency-map.md exists
-- [ ] Dependency audit subagent completed — {planning_artifacts}/dependency-audit-{date}.md exists
+- [ ] Dependency audit subagent completed — {test_artifacts}/dependency-audit-{date}.md exists
 - [ ] API documentation subagent completed (if has_apis) — {planning_artifacts}/api-documentation.md exists
 - [ ] UX design assessment subagent completed (if has_frontend) — {planning_artifacts}/ux-design.md exists
 - [ ] Event catalog subagent completed (if has_events) — {planning_artifacts}/event-catalog.md exists

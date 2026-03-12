@@ -84,7 +84,7 @@
   <action>Verify architecture.md has as-is and target sections with Mermaid diagrams</action>
   <action>Verify PRD NFR section references nfr-assessment.md baselines (not blank targets)</action>
   <action>Verify brownfield-onboarding.md links to all generated artifacts</action>
-  <action>Verify {planning_artifacts}/dependency-audit-*.md exists — required dependency audit was completed</action>
+  <action>Verify {test_artifacts}/dependency-audit-*.md exists — required dependency audit was completed</action>
 </step>
 <step n="10" title="Generate Gate Report">
   <template-output file="{planning_artifacts}/readiness-report.md">

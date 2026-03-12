@@ -25,7 +25,7 @@
     <action>Flag potential license conflicts or copyleft concerns</action>
   </step>
   <step n="5" title="Report">
-    <template-output file="{planning_artifacts}/dependency-audit-{date}.md">
+    <template-output file="{test_artifacts}/dependency-audit-{date}.md">
       Generate dependency audit report with risk levels (critical, high, medium, low), prioritized by exploitability and impact. Include: vulnerability findings with CVE IDs, outdated package list, license conflict summary, and remediation recommendations.
     </template-output>
   </step>
@@ -33,6 +33,6 @@
 
 <output>
   <format>Markdown dependency audit report with risk levels</format>
-  <location>{planning_artifacts}/dependency-audit-{date}.md</location>
+  <location>{test_artifacts}/dependency-audit-{date}.md</location>
 </output>
 </task>

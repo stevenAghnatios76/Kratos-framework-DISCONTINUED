@@ -16,5 +16,5 @@ on_error:
   unresolved_variable: "halt"
 
 output:
-  primary: "{implementation_artifacts}/{story_key}-review.md"
+  primary: "{test_artifacts}/{story_key}-code-review.md"
   secondary: "{implementation_artifacts}/{story_key}-*.md"

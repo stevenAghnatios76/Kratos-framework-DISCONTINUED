@@ -28,7 +28,7 @@
     <action>Identify unnecessary API calls or round trips</action>
   </step>
   <step n="5" title="Report">
-    <template-output file="{planning_artifacts}/performance-review-{date}.md">
+    <template-output file="{test_artifacts}/performance-review-{date}.md">
       Generate performance review report with findings by category (database, runtime, network/payload), severity levels, impact estimates, and fix suggestions.
     </template-output>
   </step>
@@ -36,6 +36,6 @@
 
 <output>
   <format>Markdown performance findings with severity and impact</format>
-  <location>{planning_artifacts}/performance-review-{date}.md</location>
+  <location>{test_artifacts}/performance-review-{date}.md</location>
 </output>
 </task>
