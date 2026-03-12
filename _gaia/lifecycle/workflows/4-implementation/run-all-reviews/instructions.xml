@@ -4,6 +4,7 @@
   <mandate>Run reviews SEQUENTIALLY — never in parallel (they write to the same story file)</mandate>
   <mandate>Do NOT write to sprint-status.yaml — story file is authoritative</mandate>
   <mandate>If any review returns FAILED, continue running remaining reviews — do NOT halt</mandate>
+  <mandate>Individual review subagents MUST NOT change story status — only this orchestrator manages status transitions after all reviews complete</mandate>
 </critical>
 
 <step n="1" title="Identify Story">
@@ -62,12 +63,12 @@
   <action>When subagent returns: read story file, check Performance Review row status. Log result.</action>
 </step>
 
-<step n="8" title="Review Summary">
+<step n="8" title="Review Summary and Status Transition">
   <action>Read story file — parse full Review Gate table</action>
-  <action>Read story status from frontmatter (may have transitioned to 'done' if last review triggered it)</action>
   <action>Generate summary table: review name | verdict | report link</action>
-  <action>If ALL 6 PASSED: report "All reviews passed. Story {story_key} is now done."</action>
-  <action>If any FAILED: list failed reviews with report links. Story remains in 'review' — user must fix and re-run failed reviews.</action>
+  <action>If ALL 6 PASSED: invoke the review-gate-check protocol to evaluate DoD and transition story to 'done' if appropriate.</action>
+  <action>If any FAILED: set story status to 'in-progress' in story file frontmatter. List failed reviews with report links. Report: "Story {story_key} moved to in-progress — fix issues and re-run failed reviews."</action>
+  <invoke-protocol name="review-gate-check" file="{project-root}/_gaia/core/protocols/review-gate-check.xml" />
   <template-output file="{implementation_artifacts}/{story_key}-review-summary.md">
     Generate review summary: story key, date, all 6 review verdicts with report links, final story status, and next actions if any reviews failed.
   </template-output>

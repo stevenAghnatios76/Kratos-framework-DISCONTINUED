@@ -37,9 +37,9 @@
 <step n="8" title="Update Review Gate and Transition">
   <action>Read story file, locate Review Gate table</action>
   <action>If PASSED: update Test Automation row status to PASSED, link report file</action>
-  <action>If FAILED: update Test Automation row status to FAILED, link report file, set story status to 'in-progress' in story file frontmatter</action>
+  <action>If FAILED: update Test Automation row status to FAILED, link report file. Do NOT change story status — the review-gate-check protocol or run-all-reviews orchestrator handles status transitions.</action>
   <template-output file="{implementation_artifacts}/{story_key}-*.md">
-    Update story file Review Gate table with test automation result and report link. If FAILED, also update story status to in-progress.
+    Update story file Review Gate table with test automation result and report link.
   </template-output>
   <invoke-protocol name="review-gate-check" file="{project-root}/_gaia/core/protocols/review-gate-check.xml" />
 </step>

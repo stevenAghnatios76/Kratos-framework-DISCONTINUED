@@ -27,12 +27,12 @@
 | E. Systemic: Story Naming Convention | 3 | 3 | 0 |
 | F. Dev-Story Cluster | 6 | 4 | 2 |
 | G. Brownfield Cluster | 8 | 0 | 8 |
-| H. Run-All-Reviews Cluster | 5 | 0 | 5 |
+| H. Run-All-Reviews Cluster | 5 | 1 | 4 |
 | I. Artifact Wiring Gaps (Issue Report) | 18 | 0 | 18 |
 | J. Individual High-Severity Bugs | 8 | 6 | 2 |
 | K. Individual Medium-Severity Bugs | 28 | 0 | 28 |
 | L. Individual Low-Severity Bugs | 18 | 0 | 18 |
-| **TOTAL** | **122** | **41** | **81** |
+| **TOTAL** | **122** | **42** | **80** |
 
 > BUG-073 is already closed — not counted above.
 
@@ -263,9 +263,8 @@
 
 **Review comment:** The orchestrator itself works (POSITIVE-006 noted graceful recovery), but the coordination between 6 subagent reviews creates edge cases. Fix BUG-085 first (status transition) as it's the most impactful.
 
-- [ ] **BUG-085** (Medium) — Run-all-reviews status transitions conflict when multiple reviews fail
-  - File: `run-all-reviews` orchestrator logic
-  - Fix: Add status lock — save original status before reviews, set final status after ALL reviews complete
+- [x] **BUG-085** (Medium) — Run-all-reviews status transitions conflict when multiple reviews fail
+  - Fix: Removed status-change from all 6 review workflows' FAILED paths. Orchestrator Step 8 now handles composite status transition. Added mandate preventing subagents from changing status.
 
 - [ ] **BUG-086** (Low) — Execution order differs from documentation
   - Fix: Align config order with documented order, or update docs
