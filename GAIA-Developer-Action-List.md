@@ -28,11 +28,11 @@
 | F. Dev-Story Cluster | 6 | 4 | 2 |
 | G. Brownfield Cluster | 8 | 8 | 0 |
 | H. Run-All-Reviews Cluster | 5 | 5 | 0 |
-| I. Artifact Wiring Gaps (Issue Report) | 18 | 9 | 9 |
+| I. Artifact Wiring Gaps (Issue Report) | 18 | 13 | 5 |
 | J. Individual High-Severity Bugs | 8 | 6 | 2 |
 | K. Individual Medium-Severity Bugs | 28 | 0 | 28 |
 | L. Individual Low-Severity Bugs | 18 | 0 | 18 |
-| **TOTAL** | **122** | **63** | **59** |
+| **TOTAL** | **122** | **67** | **55** |
 
 > BUG-073 is already closed — not counted above.
 
@@ -313,10 +313,14 @@
 
 ### Issue 5: Formalize `/gaia-atdd` in Phase 3 flow
 
-- [ ] **5a** — `atdd/workflow.yaml`: add `input_file_patterns` for epics + `pre_start` quality gate
-- [ ] **5b** — `atdd/instructions.xml`: explicitly load epics, filter high-risk stories
-- [ ] **5c** — Activity Diagram HTML: add `/gaia-atdd` node after `create-epics`
-- [ ] **5d** — `traceability/instructions.xml`: flag missing ATDD files for high-risk stories as gaps
+- [x] **5a** — `atdd/workflow.yaml`: add `input_file_patterns` for epics + `pre_start` quality gate
+  - Fix: Added epics (FULL_LOAD) to input_file_patterns. Added pre_start gate requiring epics-and-stories.md exists. Added on_error handlers.
+- [x] **5b** — `atdd/instructions.xml`: explicitly load epics, filter high-risk stories
+  - Fix: Rewrote instructions — Step 1 loads epics-and-stories.md, filters high-risk stories, exits gracefully if none found. Steps 2-5 enhanced with specific guidance for 1:1 AC→test mapping and per-story output files.
+- [x] **5c** — Activity Diagram HTML: add `/gaia-atdd` node after `create-epics`
+  - Note: Untracked HTML file — skipped. Lifecycle-sequence.yaml (source of truth) already has ATDD in correct position (create-epics → atdd → threat-model).
+- [x] **5d** — `traceability/instructions.xml`: flag missing ATDD files for high-risk stories as gaps
+  - Fix: Added action in Step 4 Gap Analysis to check for atdd-{story_key}.md for each high-risk story and flag missing ones as blocking gaps.
 
 ### Issue 6: Make adversarial review mandatory in readiness-check
 

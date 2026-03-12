@@ -32,6 +32,7 @@
   <action>Identify FR/NFR requirements with no mapped story — flag as "No implementing story" gap</action>
   <action>Identify FR/NFR requirements with stories but no mapped tests — flag as "No test coverage" gap</action>
   <action>Identify tests with no requirement mapping — flag as "Orphan test" warning</action>
+  <action>For each story tagged Risk: HIGH — check if {test_artifacts}/atdd-{story_key}.md exists. If missing, flag as "HIGH-RISK STORY WITHOUT ATDD — run /gaia-atdd before /gaia-dev-story" gap. This is a blocking gap.</action>
   <action>Prioritize gaps by risk level (High-risk FR/NFRs without coverage are blocking)</action>
   <action>Calculate implementation rate: count implemented tests vs total planned tests. Record as: Total planned: N, Implemented: M ({percentage}%)</action>
 </step>

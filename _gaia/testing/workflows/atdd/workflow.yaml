@@ -7,5 +7,16 @@ config_source: "{project-root}/_gaia/testing/config.yaml"
 installed_path: "{project-root}/_gaia/testing/workflows/atdd"
 instructions: "{installed_path}/instructions.xml"
 validation: "{installed_path}/checklist.md"
+input_file_patterns:
+  epics:
+    whole: "{planning_artifacts}/epics-and-stories.md"
+    load_strategy: "FULL_LOAD"
+quality_gates:
+  pre_start:
+    - check: "epics_exist"
+      on_fail: "HALT: Run /gaia-create-epics first — ATDD needs stories with acceptance criteria"
+on_error:
+  missing_file: "ask_user"
+  unresolved_variable: "halt"
 output:
   primary: "{test_artifacts}/atdd-{story_key}.md"

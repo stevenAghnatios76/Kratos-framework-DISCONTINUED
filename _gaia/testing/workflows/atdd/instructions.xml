@@ -2,22 +2,35 @@
 <critical>
   <mandate>Tests must fail initially — this is the red phase of TDD</mandate>
   <mandate>Each test maps to exactly one acceptance criterion</mandate>
+  <mandate>Only high-risk stories require ATDD — if no high-risk stories exist, exit gracefully</mandate>
 </critical>
-<step n="1" title="Load Acceptance Criteria">
-  <action>Read story file or PRD for acceptance criteria</action>
+<step n="1" title="Load and Filter High-Risk Stories">
+  <action>Read {planning_artifacts}/epics-and-stories.md</action>
+  <action>Filter stories tagged as Risk: HIGH</action>
+  <action>For each high-risk story: extract acceptance criteria (AC1, AC2, ...)</action>
+  <check if="no high-risk stories found">Report "No high-risk stories found — ATDD not required for this project." and exit workflow.</check>
+  <action>Present the list of high-risk stories and their ACs to the user</action>
+  <ask>These high-risk stories need ATDD tests. Confirm to proceed with all, or select specific stories. [all / select / skip]</ask>
 </step>
 <step n="2" title="Convert to Tests">
-  <action>Transform each AC into a failing acceptance test</action>
-  <action>One test per AC — clear 1:1 mapping</action>
+  <action>For each selected high-risk story: transform each AC into a failing acceptance test</action>
+  <action>One test per AC — maintain clear 1:1 mapping (AC1 → Test 1, AC2 → Test 2, ...)</action>
+  <action>Name tests descriptively: test name should reflect the AC being validated</action>
 </step>
 <step n="3" title="Implement Tests">
-  <action>Write the test code (red phase — tests must fail)</action>
+  <action>Write the test code (red phase — tests must fail because implementation does not exist yet)</action>
+  <action>Use the project's test framework conventions if detectable</action>
+  <action>Each test must be atomic, independent, and meaningful — no vacuous assertions</action>
 </step>
 <step n="4" title="Validate Structure">
-  <action>Ensure tests are atomic, independent, and meaningful</action>
+  <action>Ensure every AC from the selected stories has exactly one corresponding test</action>
+  <action>Verify tests are independent — no shared state between tests</action>
+  <action>Run tests to confirm they all FAIL (red phase validation)</action>
 </step>
 <step n="5" title="Generate Output">
-  <action>Generate acceptance test document with AC-to-test mapping</action>
-  <template-output file="{test_artifacts}/atdd-{story-key}.md" />
+  <action>For each high-risk story: generate ATDD document with AC-to-test mapping table, test code, and run results showing failures</action>
+  <template-output file="{test_artifacts}/atdd-{story_key}.md">
+    Generate one ATDD file per high-risk story. Each file includes: story key, story title, risk level, AC-to-test mapping table, test implementations, and test run output confirming all tests fail (red phase).
+  </template-output>
 </step>
 </workflow>
