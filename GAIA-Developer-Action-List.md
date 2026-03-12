@@ -28,11 +28,11 @@
 | F. Dev-Story Cluster | 6 | 4 | 2 |
 | G. Brownfield Cluster | 8 | 8 | 0 |
 | H. Run-All-Reviews Cluster | 5 | 5 | 0 |
-| I. Artifact Wiring Gaps (Issue Report) | 18 | 4 | 14 |
+| I. Artifact Wiring Gaps (Issue Report) | 18 | 9 | 9 |
 | J. Individual High-Severity Bugs | 8 | 6 | 2 |
 | K. Individual Medium-Severity Bugs | 28 | 0 | 28 |
 | L. Individual Low-Severity Bugs | 18 | 0 | 18 |
-| **TOTAL** | **122** | **58** | **64** |
+| **TOTAL** | **122** | **63** | **59** |
 
 > BUG-073 is already closed — not counted above.
 
@@ -294,17 +294,22 @@
 
 ### Issue 2: Wire orphaned research artifacts
 
-- [ ] **2a** — `create-product-brief/workflow.yaml`: add `domain_research` and `technical_research` to `input_file_patterns`
-- [ ] **2b** — `create-product-brief/instructions.xml`: add explicit load actions for domain + technical research
+- [x] **2a** — `create-product-brief/workflow.yaml`: add `domain_research` and `technical_research` to `input_file_patterns`
+  - Fix: Already done as part of BUG-004 (Group J). Also added `technical_research` to `create-architecture/workflow.yaml` per issue report recommendation.
+- [x] **2b** — `create-product-brief/instructions.xml`: add explicit load actions for domain + technical research
+  - Fix: Already done as part of BUG-004 (Group J). Step 1 loads both, Step 5 references technical research.
 
 ### Issue 3: Wire `ux-design.md` into implementation workflows
 
-- [ ] **3a** — `create-epics-stories/workflow.yaml`: add `ux_design` to `input_file_patterns` (FULL_LOAD)
-- [ ] **3b** — `dev-story/workflow.yaml`: add `architecture` and `ux_design` to `input_file_patterns` (INDEX_GUIDED)
+- [x] **3a** — `create-epics-stories/workflow.yaml`: add `ux_design` to `input_file_patterns` (FULL_LOAD)
+  - Fix: Added ux_design (FULL_LOAD) to workflow.yaml. Updated instructions.xml: Step 1 loads ux-design.md, Step 4 requires frontend stories to reference specific UX flows/components.
+- [x] **3b** — `dev-story/workflow.yaml`: add `architecture` and `ux_design` to `input_file_patterns` (INDEX_GUIDED)
+  - Fix: Added both (INDEX_GUIDED) to workflow.yaml. Updated instructions.xml Step 5 to load relevant architecture sections and UX design sections for the story.
 
 ### Issue 4: Fix missing discover-inputs protocol
 
-- [ ] **4** — Create `_gaia/core/protocols/discover-inputs.xml` OR remove dead reference from `create-product-brief/instructions.xml`
+- [x] **4** — Create `_gaia/core/protocols/discover-inputs.xml` OR remove dead reference from `create-product-brief/instructions.xml`
+  - Fix: Protocol already exists at `_gaia/core/engine/protocols/discover-inputs.xml`. Issue report searched wrong path. No changes needed.
 
 ### Issue 5: Formalize `/gaia-atdd` in Phase 3 flow
 

@@ -4,9 +4,10 @@
   <mandate>Every story must have depends_on and blocks declarations</mandate>
   <mandate>Stories must be ordered by dependency topology + business priority</mandate>
 </critical>
-<step n="1" title="Load PRD and Architecture">
+<step n="1" title="Load PRD, Architecture, and UX Design">
   <action>Read {planning_artifacts}/prd.md — extract functional requirements</action>
   <action>Read {planning_artifacts}/architecture.md — extract technical components</action>
+  <action>Read {planning_artifacts}/ux-design.md if available — extract UI flows, component hierarchy, interaction patterns, and accessibility requirements. Set {has_ux_design} flag.</action>
   <action>GATE: verify architecture.md contains a "## Review Findings Incorporated" section. If missing, HALT — run /gaia-create-arch first to complete adversarial review and architecture refinement.</action>
 </step>
 <step n="2" title="Detect Mode">
@@ -28,6 +29,7 @@
   <action>Each story needs: title, description, acceptance criteria, size estimate (S/M/L/XL)</action>
   <action>Use format: "As a [user], I want to [action] so that [benefit]"</action>
   <action>Brownfield: stories must trace to PRD gap requirement IDs. Do NOT create stories for existing implemented features.</action>
+  <action>If {has_ux_design}: frontend stories MUST reference specific UX flows, components, and interaction patterns from ux-design.md. Include relevant screen names, navigation paths, and accessibility requirements in acceptance criteria.</action>
 </step>
 <step n="5" title="Apply Test-Plan Risk Levels">
   <action>Read {test_artifacts}/test-plan.md — extract risk assessment: high-risk areas (revenue-critical, security-sensitive, complex logic)</action>

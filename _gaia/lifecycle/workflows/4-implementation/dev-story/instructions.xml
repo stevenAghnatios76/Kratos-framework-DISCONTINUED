@@ -35,6 +35,8 @@
   <action>Update sprint-status.yaml: set story to 'in-progress'</action>
 </step>
 <step n="5" title="Plan Implementation">
+  <action>Load relevant sections from {planning_artifacts}/architecture.md — identify architectural components, patterns, and ADRs that apply to this story's scope</action>
+  <action>Load relevant sections from {planning_artifacts}/ux-design.md if available — identify UI components, interaction patterns, navigation flows, and accessibility requirements for this story</action>
   <action>Break subtasks into implementation plan</action>
   <action>Declare which files will be created/modified</action>
   <ask>Here is the implementation plan with files to create/modify. Confirm to proceed, or request changes. [confirm / revise]</ask>

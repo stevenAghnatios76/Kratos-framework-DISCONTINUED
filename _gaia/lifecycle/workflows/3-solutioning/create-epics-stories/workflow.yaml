@@ -17,6 +17,9 @@ input_file_patterns:
   test_plan:
     whole: "{test_artifacts}/test-plan.md"
     load_strategy: "FULL_LOAD"
+  ux_design:
+    whole: "{planning_artifacts}/ux-design.md"
+    load_strategy: "FULL_LOAD"
 quality_gates:
   pre_start:
     - check: "architecture_exists"

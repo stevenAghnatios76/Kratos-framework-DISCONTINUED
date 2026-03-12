@@ -14,6 +14,9 @@ input_file_patterns:
   ux:
     whole: "{planning_artifacts}/ux-design.md"
     load_strategy: "FULL_LOAD"
+  technical_research:
+    whole: "{planning_artifacts}/technical-research.md"
+    load_strategy: "FULL_LOAD"
 quality_gates:
   pre_start:
     - check: "prd_exists"

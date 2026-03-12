@@ -28,6 +28,12 @@ input_file_patterns:
   story:
     whole: "{implementation_artifacts}/{{story_key}}-*.md"
     load_strategy: "FULL_LOAD"
+  architecture:
+    whole: "{planning_artifacts}/architecture.md"
+    load_strategy: "INDEX_GUIDED"
+  ux_design:
+    whole: "{planning_artifacts}/ux-design.md"
+    load_strategy: "INDEX_GUIDED"
 on_error:
   missing_file: "ask_user"
   unresolved_variable: "halt"
