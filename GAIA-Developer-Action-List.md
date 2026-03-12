@@ -30,9 +30,9 @@
 | H. Run-All-Reviews Cluster | 5 | 5 | 0 |
 | I. Artifact Wiring Gaps (Issue Report) | 18 | 18 | 0 |
 | J. Individual High-Severity Bugs | 8 | 6 | 2 |
-| K. Individual Medium-Severity Bugs | 28 | 11 | 17 |
+| K. Individual Medium-Severity Bugs | 28 | 12 | 16 |
 | L. Individual Low-Severity Bugs | 18 | 0 | 18 |
-| **TOTAL** | **122** | **83** | **39** |
+| **TOTAL** | **122** | **84** | **38** |
 
 > BUG-073 is already closed — not counted above.
 
@@ -415,8 +415,8 @@ Bugs not already covered in systemic groups.
 - [x] **BUG-025** (Medium) — `/gaia-ci-setup` document missing secrets management, deployment strategy, and monitoring/notifications
   - Fix: Added 3 new steps to instructions.xml: Secrets Management (Step 4), Deployment Strategy (Step 5), Monitoring & Notifications (Step 6). Updated checklist with corresponding items.
 
-- [ ] **BUG-027** (Medium) — `/gaia-test-design` missing test environment requirements
-  - Fix: Add section for test environment setup, test data strategy, and CI requirements
+- [x] **BUG-027** (Medium) — `/gaia-readiness-check` TEA assessment missing Technical and Estimation evaluations
+  - Fix: Expanded Step 5 to cover all TEA dimensions: Technical (team expertise, learning curve), Estimation (numeric points, oversized story detection), Architecture (ADR resolution, adversarial findings), Testing (existing items). Added sub-fields to gate report YAML.
 
 - [ ] **BUG-028** (Medium) — `/gaia-test-design` no risk-based test prioritization
   - Fix: Map tests to story risk levels (High/Medium/Low) and prioritize accordingly

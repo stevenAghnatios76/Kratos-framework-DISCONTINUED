@@ -55,9 +55,10 @@
     Count BLOCKING contradictions. If count > 0: set contradiction_check = FAIL. Else: PASS.</action>
 </step>
 <step n="5" title="TEA Readiness">
-  <action>Is test strategy implied or defined?</action>
-  <action>Are acceptance criteria testable and automatable?</action>
-  <action>Are NFR targets quantified for performance testing?</action>
+  <action>TECHNICAL: Evaluate team expertise against chosen stack from architecture.md. Flag any technologies with no prior team experience. Estimate learning curve risk (Low/Medium/High).</action>
+  <action>ESTIMATION: Check if stories in epics-and-stories.md use numeric story points. Flag T-shirt sizing (S/M/L/XL) without point equivalents as an estimation gap. Flag oversized stories (>13 points) as needing decomposition.</action>
+  <action>ARCHITECTURE: Count ADRs in architecture.md. Flag any with Status: Proposed (unresolved). Check if adversarial review findings were incorporated. Check threat model risk level if threat-model.md exists.</action>
+  <action>TESTING: Is test strategy defined? Are acceptance criteria testable and automatable? Are NFR targets quantified for performance testing?</action>
 </step>
 <step n="6" title="Test Infrastructure Readiness">
   <action>Verify traceability-matrix.md covers all PRD requirements — flag uncovered requirements as blocking</action>
@@ -102,6 +103,9 @@
       stories_complete: true/false
       contradiction_check: PASS/FAIL
       tea_ready: true/false
+      tea_technical: PASS/FAIL (team expertise vs stack)
+      tea_estimation: PASS/FAIL (numeric points, no oversized stories)
+      tea_architecture: PASS/FAIL (ADRs resolved, findings incorporated)
       test_plan_exists: true/false
       traceability_complete: true/false
       traceability_gate_decision: PASS/BLOCKED/FAIL/NOT_DECLARED

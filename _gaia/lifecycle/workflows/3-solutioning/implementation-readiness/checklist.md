@@ -23,8 +23,10 @@ validation-target: 'Readiness gate report'
 - [ ] All BLOCKING contradictions listed in blocking_issues
 - [ ] Contradictions table included in report body
 ## TEA Readiness
-- [ ] Acceptance criteria are testable
-- [ ] NFR targets quantified
+- [ ] Technical: team expertise evaluated against chosen stack, learning curve assessed
+- [ ] Estimation: stories use numeric points (not just T-shirt sizes), no oversized stories (>13 pts)
+- [ ] Architecture: all ADRs resolved (none Proposed), adversarial findings incorporated, threat model reviewed
+- [ ] Testing: acceptance criteria testable, NFR targets quantified
 ## Test Infrastructure
 - [ ] test-plan.md exists at {test_artifacts}/test-plan.md
 - [ ] traceability-matrix.md covers all PRD requirements
