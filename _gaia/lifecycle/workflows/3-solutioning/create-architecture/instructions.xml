@@ -60,7 +60,7 @@
 <step n="8" title="Architecture Decision Records">
   <action>Review all decisions made in steps 3-7</action>
   <action>Ensure each significant decision is recorded as ADR</action>
-  <action>ADR format: title, date, status, context, decision, consequences</action>
+  <action>Each ADR MUST follow this template: ### ADR-{NNN}: {Title} — **Date:** {YYYY-MM-DD} — **Status:** Proposed | Accepted | Deprecated | Superseded | Existing (brownfield) — **Context:** What is the issue or requirement driving this decision? — **Decision:** What was decided and why this option was chosen over alternatives? — **Alternatives Considered:** What other options were evaluated? — **Consequences:** What are the positive and negative implications? — **Addresses:** {FR/NFR IDs this decision satisfies}</action>
   <action>Brownfield: mark existing decisions as status "Existing", new gap-related decisions as "Proposed"</action>
   <action>For each ADR: add an "Addresses" field listing the FR/NFR IDs it satisfies (e.g., "Addresses: FR-003, NFR-002")</action>
   <action>Append all ADRs to _memory/architect-sidecar/architecture-decisions.md</action>

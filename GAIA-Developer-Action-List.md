@@ -30,9 +30,9 @@
 | H. Run-All-Reviews Cluster | 5 | 5 | 0 |
 | I. Artifact Wiring Gaps (Issue Report) | 18 | 18 | 0 |
 | J. Individual High-Severity Bugs | 8 | 6 | 2 |
-| K. Individual Medium-Severity Bugs | 28 | 8 | 20 |
+| K. Individual Medium-Severity Bugs | 28 | 9 | 19 |
 | L. Individual Low-Severity Bugs | 18 | 0 | 18 |
-| **TOTAL** | **122** | **80** | **42** |
+| **TOTAL** | **122** | **81** | **41** |
 
 > BUG-073 is already closed — not counted above.
 
@@ -406,8 +406,8 @@ Bugs not already covered in systemic groups.
 - [x] **BUG-021** (Medium) — `/gaia-create-arch` security section thin
   - Fix: Added threat_model to workflow.yaml input_file_patterns. Step 1 loads threat-model.md if available. Step 7 adds security architecture action that cross-references threat model findings or prompts for security requirements if no threat model exists.
 
-- [ ] **BUG-022** (Medium) — `/gaia-create-arch` no ADR (Architecture Decision Record) format
-  - Fix: Output architecture decisions as ADRs with Status, Context, Decision, Consequences
+- [x] **BUG-022** (Medium) — `/gaia-create-arch` no ADR (Architecture Decision Record) format
+  - Fix: Replaced loose format hint with enforced ADR template: ADR-{NNN} numbering, Status (Proposed/Accepted/Deprecated/Superseded/Existing), Context, Decision, Alternatives Considered, Consequences, Addresses (FR/NFR IDs).
 
 - [ ] **BUG-023** (Medium) — `/gaia-create-arch` missing scalability analysis
   - Fix: Add scalability section referencing NFR performance/scalability targets
