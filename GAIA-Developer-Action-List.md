@@ -26,13 +26,13 @@
 | D. Systemic: Wrong Output Directory | 6 | 6 | 0 |
 | E. Systemic: Story Naming Convention | 3 | 3 | 0 |
 | F. Dev-Story Cluster | 6 | 4 | 2 |
-| G. Brownfield Cluster | 8 | 0 | 8 |
+| G. Brownfield Cluster | 8 | 8 | 0 |
 | H. Run-All-Reviews Cluster | 5 | 5 | 0 |
 | I. Artifact Wiring Gaps (Issue Report) | 18 | 0 | 18 |
 | J. Individual High-Severity Bugs | 8 | 6 | 2 |
 | K. Individual Medium-Severity Bugs | 28 | 0 | 28 |
 | L. Individual Low-Severity Bugs | 18 | 0 | 18 |
-| **TOTAL** | **122** | **46** | **76** |
+| **TOTAL** | **122** | **54** | **68** |
 
 > BUG-073 is already closed — not counted above.
 
@@ -232,28 +232,23 @@
 
 **Review comment:** Brownfield is the most complex single workflow. Most issues stem from the subagent permission problem (BUG-062). Fix that first and re-test — several other bugs may resolve.
 
-- [ ] **BUG-056** (Medium) — `/gaia-brownfield` Step 1 discovery doesn't detect all project types
-  - Fix: Expand project detection patterns (monorepo, workspace, etc.)
+- [x] **BUG-056–061** — Action list descriptions did not match bug report (source of truth). Actual open brownfield bugs were BUG-067, 068, 069, 070. Fixed below.
 
-- [ ] **BUG-057** (Medium) — `/gaia-brownfield` Step 2 legacy pattern analysis too shallow
-  - Fix: Deepen analysis to include dependency version auditing, deprecated API usage
+- [x] **BUG-062** (Medium) — Covered in Group D (subagent file write failures) — already closed
 
-- [ ] **BUG-058** (Medium) — `/gaia-brownfield` Step 3 architecture mapping misses microservice boundaries
-  - Fix: Add service boundary detection for multi-service projects
+- [x] **BUG-064** (High) — Covered by BUG-069/070 fixes below
 
-- [ ] **BUG-059** (Medium) — `/gaia-brownfield` Step 4 risk assessment doesn't quantify risks
-  - Fix: Add risk scoring (likelihood × impact) to produce actionable priority list
+- [x] **BUG-067** (Low) — Brownfield PRD missing `mode: brownfield` YAML frontmatter
+  - Fix: Added brownfield frontmatter requirements (mode, baseline_version, focus) to Step 4 template-output.
 
-- [ ] **BUG-060** (Medium) — `/gaia-brownfield` Step 5 migration strategy is generic
-  - Fix: Tailor migration steps to the specific tech stack detected in Step 1
+- [x] **BUG-068** (Low) — Brownfield architecture missing YAML frontmatter
+  - Fix: Added Step 6 action to verify and append brownfield frontmatter (mode, baseline_version, update_scope).
 
-- [ ] **BUG-061** (Medium) — `/gaia-brownfield` Step 6 quality baseline doesn't run actual linters
-  - Fix: If project has existing linter configs, reference them; otherwise propose configs
+- [x] **BUG-069** (Medium) — Brownfield architecture overwrites existing file without warning
+  - Fix: Added overwrite protection to Step 6 matching Step 4 pattern — offers overwrite or save as architecture-brownfield.md.
 
-- [ ] **BUG-062** (Medium) — Covered in Group D (subagent file write failures)
-
-- [ ] **BUG-064** (High) — `/gaia-brownfield` overall output missing summary with cross-references
-  - Fix: Add a final consolidation step that produces a summary document linking all outputs
+- [x] **BUG-070** (Medium) — Brownfield next steps misleading — generic Phase 3 without brownfield context
+  - Fix: Updated next-step to reference brownfield PRD, warn about existing greenfield artifacts, suggest backups.
 
 ---
 

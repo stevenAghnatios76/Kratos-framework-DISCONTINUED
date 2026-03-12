@@ -58,7 +58,7 @@
   <action>Non-Functional Requirements = NFR gaps with current baseline and target from {test_artifacts}/nfr-assessment.md</action>
   <action>If {planning_artifacts}/prd.md already exists: WARN user — "A PRD already exists. Continuing will overwrite it with brownfield gap content. Choose: (a) overwrite, (b) save as prd-brownfield-gaps.md instead." If user chooses (b), adjust template-output path accordingly.</action>
   <template-output file="{planning_artifacts}/prd.md">
-    Generate a PRD following the standard template structure. Add "Mode: Brownfield — gaps only" to the header. All sections must follow the template format but contain only gap-focused content. NFR section must include "Current Baseline" and "Target" columns with real values from {test_artifacts}/nfr-assessment.md. Include a Priority Matrix section mapping each gap to priority/effort/impact.
+    Generate a PRD following the standard template structure. YAML frontmatter MUST include: mode: brownfield, baseline_version: {version from package.json or inferred}, focus: gap-filling. Add "Mode: Brownfield — gaps only" to the header. All sections must follow the template format but contain only gap-focused content. NFR section must include "Current Baseline" and "Target" columns with real values from {test_artifacts}/nfr-assessment.md. Include a Priority Matrix section mapping each gap to priority/effort/impact.
   </template-output>
 </step>
 
@@ -75,10 +75,17 @@
 
 <step n="6" title="Architecture">
   <action>Architecture is created using the Phase 3 workflow which auto-detects brownfield mode from the PRD "Mode: Brownfield" header set in step 4.</action>
-  <action>Spawn a subagent using the Agent tool: "Load {project-root}/_gaia/core/engine/workflow.xml, then process {project-root}/_gaia/lifecycle/workflows/3-solutioning/create-architecture/workflow.yaml as workflow-config. Run in YOLO mode. Follow the workflow engine instructions EXACTLY." When subagent returns: verify {planning_artifacts}/architecture.md exists.</action>
+  <action>If {planning_artifacts}/architecture.md already exists: WARN user — "An architecture document already exists. Continuing will overwrite it with the brownfield version. Choose: (a) overwrite, (b) save as architecture-brownfield.md instead." If user chooses (b), instruct the subagent to output to {planning_artifacts}/architecture-brownfield.md.</action>
+  <action>Spawn a subagent using the Agent tool: "Load {project-root}/_gaia/core/engine/workflow.xml, then process {project-root}/_gaia/lifecycle/workflows/3-solutioning/create-architecture/workflow.yaml as workflow-config. Run in YOLO mode. Follow the workflow engine instructions EXACTLY." When subagent returns: verify the architecture file exists at the chosen path.</action>
+  <action>After architecture is generated: verify it has YAML frontmatter with mode: brownfield, baseline_version: {version}, and update_scope: [list of components being modified]. If these fields are missing, append them to the YAML frontmatter block.</action>
   <action>Epics and stories require a test plan first. The remaining Phase 3 sequence (/gaia-test-design → /gaia-create-epics → /gaia-readiness-check) must be run after this workflow completes.</action>
 </step>
 <next-step command="/gaia-test-design">
-  Run Phase 3 sequence: /gaia-test-design → /gaia-create-epics → /gaia-readiness-check. Start with /gaia-test-design to create the test plan required by create-epics.
+  Run Phase 3 sequence targeting the brownfield PRD:
+  1. /gaia-test-design — target the brownfield PRD (prd.md or prd-brownfield-gaps.md depending on Step 4 choice)
+  2. /gaia-create-epics — create epics and stories for gap requirements only
+  3. /gaia-readiness-check — validate implementation readiness
+
+  WARNING: If Phase 3 artifacts already exist from a prior greenfield setup (test-plan.md, epics-and-stories.md), running these workflows will overwrite them. Consider backing up existing artifacts or using the brownfield PRD path to generate separate brownfield-specific outputs.
 </next-step>
 </workflow>
