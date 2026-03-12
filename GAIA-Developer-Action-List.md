@@ -30,9 +30,9 @@
 | H. Run-All-Reviews Cluster | 5 | 5 | 0 |
 | I. Artifact Wiring Gaps (Issue Report) | 18 | 18 | 0 |
 | J. Individual High-Severity Bugs | 8 | 6 | 2 |
-| K. Individual Medium-Severity Bugs | 28 | 6 | 22 |
+| K. Individual Medium-Severity Bugs | 28 | 7 | 21 |
 | L. Individual Low-Severity Bugs | 18 | 0 | 18 |
-| **TOTAL** | **122** | **78** | **44** |
+| **TOTAL** | **122** | **79** | **43** |
 
 > BUG-073 is already closed — not counted above.
 
@@ -400,8 +400,8 @@ Bugs not already covered in systemic groups.
 
 ### Phase 3 — Solutioning
 
-- [ ] **BUG-020** (Medium) — `/gaia-create-arch` doesn't consider existing codebase (brownfield)
-  - Fix: If brownfield artifacts exist, load them as context
+- [x] **BUG-020** (Medium) — `/gaia-create-arch` doesn't consider existing codebase (brownfield)
+  - Fix: Added brownfield_assessment and project_documentation to workflow.yaml input_file_patterns. Step 1 loads brownfield artifacts if they exist regardless of PRD mode. Step 3 references existing tech stack from brownfield analysis when available.
 
 - [ ] **BUG-021** (Medium) — `/gaia-create-arch` security section thin
   - Fix: Cross-reference with threat-model output if available; otherwise prompt for security requirements

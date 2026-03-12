@@ -17,6 +17,12 @@ input_file_patterns:
   technical_research:
     whole: "{planning_artifacts}/technical-research.md"
     load_strategy: "FULL_LOAD"
+  brownfield_assessment:
+    whole: "{planning_artifacts}/brownfield-assessment.md"
+    load_strategy: "FULL_LOAD"
+  project_documentation:
+    whole: "{planning_artifacts}/project-documentation.md"
+    load_strategy: "INDEX_GUIDED"
 quality_gates:
   pre_start:
     - check: "prd_exists"

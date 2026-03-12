@@ -8,6 +8,7 @@
   <action>Read {planning_artifacts}/prd.md — extract requirements</action>
   <action>GATE: verify prd.md contains a "## Review Findings Incorporated" section. If missing, HALT — run /gaia-create-prd first to complete adversarial review and PRD refinement.</action>
   <action>Read {planning_artifacts}/ux-design.md if available — extract UI requirements</action>
+  <action>Check for brownfield artifacts: {planning_artifacts}/brownfield-assessment.md and {planning_artifacts}/project-documentation.md. If either exists, load them — these contain existing codebase analysis that must inform architecture decisions even if the PRD is not in brownfield mode.</action>
 </step>
 <step n="2" title="Detect Mode">
   <action>Check {planning_artifacts}/prd.md header for "Mode: Brownfield"</action>
@@ -22,6 +23,7 @@
 <step n="3" title="Technology Selection">
   <action>Greenfield: select tech stack with rationale for each choice. Consider: team expertise, scalability needs, ecosystem maturity.</action>
   <action>Brownfield: discover existing tech stack from project-documentation.md and code scan. Mark ADR status as "Existing" for discovered decisions.</action>
+  <action>If brownfield artifacts were loaded in Step 1: reference the existing tech stack, constraints, and integration points from project-documentation.md and brownfield-assessment.md when evaluating technology choices. Prefer compatibility with the existing stack unless a change is justified by PRD requirements.</action>
   <action>Record decision as ADR in _memory/architect-sidecar/architecture-decisions.md</action>
   <ask>Here is the recommended technology stack with rationale for each choice. Please review — confirm to proceed or request changes before I design the full architecture. [confirm / revise]</ask>
 </step>
