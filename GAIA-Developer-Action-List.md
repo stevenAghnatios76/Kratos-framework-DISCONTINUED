@@ -30,9 +30,9 @@
 | H. Run-All-Reviews Cluster | 5 | 5 | 0 |
 | I. Artifact Wiring Gaps (Issue Report) | 18 | 18 | 0 |
 | J. Individual High-Severity Bugs | 8 | 6 | 2 |
-| K. Individual Medium-Severity Bugs | 28 | 5 | 23 |
+| K. Individual Medium-Severity Bugs | 28 | 6 | 22 |
 | L. Individual Low-Severity Bugs | 18 | 0 | 18 |
-| **TOTAL** | **122** | **77** | **45** |
+| **TOTAL** | **122** | **78** | **44** |
 
 > BUG-073 is already closed — not counted above.
 
@@ -395,8 +395,8 @@ Bugs not already covered in systemic groups.
 - [x] **BUG-016** (Medium) — `/gaia-create-ux` doesn't reference PRD requirements
   - Fix: Added FR mapping actions in Steps 3 (pages→FR IDs), 4 (wireframes→FR IDs), 5 (interactions→user journeys). Updated template-output to include FR-to-Screen Mapping table.
 
-- [ ] **BUG-018** (Medium) — `/gaia-review-a11y` output format inconsistent
-  - Fix: Standardize output to use WCAG 2.1 guideline references for each finding
+- [x] **BUG-018** (Medium) — `/gaia-review-a11y` output format inconsistent
+  - Fix: Added WCAG 2.1 criterion citation requirement to Steps 2-4. Standardized report format: each finding must include WCAG Criterion ID, Name, Conformance Level (A/AA/AAA), Severity, Description, and Remediation.
 
 ### Phase 3 — Solutioning
 
