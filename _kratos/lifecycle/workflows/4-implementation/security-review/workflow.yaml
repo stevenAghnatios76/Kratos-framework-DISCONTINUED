@@ -1,0 +1,27 @@
+name: security-review
+description: 'Pre-merge security review: OWASP, secrets, auth patterns'
+module: lifecycle
+agent: security
+config_resolved: "{project-root}/_kratos/lifecycle/.resolved/security-review.yaml"
+config_source: "{project-root}/_kratos/lifecycle/config.yaml"
+installed_path: "{project-root}/_kratos/lifecycle/workflows/4-implementation/security-review"
+instructions: "{installed_path}/instructions.xml"
+validation: "{installed_path}/checklist.md"
+quality_gates:
+  pre_start:
+    - check: "story_status == 'review'"
+      on_fail: "HALT: Story must be in review status before security review"
+input_file_patterns:
+  story:
+    whole: "{implementation_artifacts}/{{story_key}}.md"
+    load_strategy: "FULL_LOAD"
+  threat_model:
+    whole: "{planning_artifacts}/threat-model.md"
+    load_strategy: "FULL_LOAD"
+on_error:
+  missing_file: "ask_user"
+  unresolved_variable: "halt"
+
+output:
+  primary: "{implementation_artifacts}/{story_key}-security-review.md"
+  secondary: "{implementation_artifacts}/{story_key}.md"

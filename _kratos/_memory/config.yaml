@@ -1,0 +1,4 @@
+# Memory module config
+checkpoint_path: "{project-root}/_kratos/_memory/checkpoints"
+completed_path: "{project-root}/_kratos/_memory/checkpoints/completed"
+sidecar_root: "{project-root}/_kratos/_memory"

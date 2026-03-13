@@ -1,0 +1,49 @@
+<workflow name="fix-story">
+<critical>
+  <mandate>Fix all FAIL findings from the validation report</mandate>
+  <mandate>Preserve all existing valid content — only modify sections flagged as FAIL</mandate>
+  <mandate>Remove the old validation report after fixes are applied</mandate>
+</critical>
+<step n="1" title="Load Story">
+  <ask>Which story to fix? (provide story key, e.g., 1.2)</ask>
+  <action>Find and read the story file matching {story_key}-*.md in {implementation_artifacts}/</action>
+</step>
+<step n="2" title="Parse Validation Report">
+  <action>Locate the "## Validation Report" section at the end of the story file (after the --- separator)</action>
+  <action>Extract all FAIL findings with their section names and issue descriptions</action>
+  <check if="no_validation_report">If no validation report is found, HALT and instruct the user to run /kratos-validate-story first</check>
+  <check if="all_pass">If all sections are PASS, inform user the story has no issues to fix and STOP</check>
+</step>
+<step n="3" title="Load Template Reference">
+  <action>Read the story template from {project-root}/_kratos/lifecycle/templates/story-template.md</action>
+  <action>Use the template as reference for expected structure and format of each section</action>
+</step>
+<step n="4" title="Fix Flagged Issues">
+  <action>For each FAIL finding, fix the corresponding section:
+    - Missing sections: add the section following the template structure
+    - Incomplete metadata: fill in missing header fields (Epic, Sprint, Date, Author, Status, Traces to)
+    - Unclear ACs: rewrite in Given/When/Then format, ensure each is testable
+    - Unlinked subtasks: link each subtask to an AC number
+    - Empty Test Scenarios: populate the test scenarios table
+    - Missing DoD: add specific, measurable Definition of Done items
+    - Other issues: address per the validation finding description
+  </action>
+  <action>Preserve all existing valid content — do NOT rewrite sections that passed validation</action>
+</step>
+<step n="5" title="Remove Validation Report">
+  <action>Remove the --- separator and the entire "## Validation Report" section from the end of the story</action>
+</step>
+<step n="6" title="Save Corrected Story">
+  <action>Story status remains 'validating' — user must re-run /kratos-validate-story to promote to ready-for-dev</action>
+  <template-output file="{implementation_artifacts}/{story_key}-{story_title_slug}.md">
+    Save the corrected story file with all FAIL issues resolved and the old validation report removed. The story should now pass all validation checks. Inform the user to run /kratos-validate-story to validate and promote the story to ready-for-dev.
+  </template-output>
+</step>
+<step n="7" title="Update Sprint Status">
+  <action>Read {implementation_artifacts}/sprint-status.yaml</action>
+  <action>Ensure the story entry status is set to 'validating'</action>
+  <template-output file="{implementation_artifacts}/sprint-status.yaml">
+    Update sprint-status.yaml to confirm the story status is validating. User must run /kratos-validate-story to promote to ready-for-dev.
+  </template-output>
+</step>
+</workflow>

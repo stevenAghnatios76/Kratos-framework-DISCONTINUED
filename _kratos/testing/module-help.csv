@@ -1,0 +1,13 @@
+name,code,command,description,agent
+"teach-me-testing","teach-testing","kratos-teach-testing","Teach testing progressively","test-architect"
+"test-design","test-design","kratos-test-design","Create risk-based test plans","test-architect"
+"test-framework","test-framework","kratos-test-framework","Initialize test framework","test-architect"
+"ci-setup","ci-setup","kratos-ci-setup","Scaffold CI/CD quality pipeline","test-architect"
+"atdd","atdd","kratos-atdd","Generate failing acceptance tests","test-architect"
+"test-automation","test-automate","kratos-test-automate","Expand automated test coverage","test-architect"
+"test-review","test-review","kratos-test-review","Review test quality","test-architect"
+"nfr-assessment","nfr","kratos-nfr","Assess non-functional requirements","test-architect"
+"traceability","trace","kratos-trace","Generate traceability matrix","test-architect"
+"accessibility-testing","a11y-testing","kratos-a11y-testing","Create accessibility test plan","test-architect"
+"performance-testing","perf-testing","kratos-perf-testing","Create performance test plan","test-architect"
+"mobile-testing","mobile-testing","kratos-mobile-testing","Create mobile test plan","test-architect"

@@ -1,0 +1,11 @@
+name: traceability
+description: 'Generate traceability matrix and quality gate decision'
+module: testing
+agent: test-architect
+config_resolved: "{project-root}/_kratos/testing/.resolved/traceability.yaml"
+config_source: "{project-root}/_kratos/testing/config.yaml"
+installed_path: "{project-root}/_kratos/testing/workflows/traceability"
+instructions: "{installed_path}/instructions.xml"
+validation: "{installed_path}/checklist.md"
+output:
+  primary: "{test_artifacts}/traceability-matrix.md"

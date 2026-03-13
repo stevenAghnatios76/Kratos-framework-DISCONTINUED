@@ -1,9 +1,0 @@
-name,displayName,description,path,applicable_agents
-"git-workflow","Git Workflow","Branching, PRs, conventional commits, conflict resolution","_gaia/dev/skills/git-workflow.md","all-dev,sm,devops"
-"api-design","API Design","REST, GraphQL, OpenAPI, versioning, error standards","_gaia/dev/skills/api-design.md","all-dev,architect,data-engineer"
-"database-design","Database Design","Schema, migrations, indexing, ORM patterns","_gaia/dev/skills/database-design.md","java-dev,python-dev,architect,data-engineer"
-"docker-workflow","Docker Workflow","Multi-stage builds, compose, security scanning","_gaia/dev/skills/docker-workflow.md","typescript-dev,angular-dev,java-dev,python-dev,mobile-dev,devops"
-"testing-patterns","Testing Patterns","TDD cycle, unit/integration testing, test doubles","_gaia/dev/skills/testing-patterns.md","all-dev,qa,test-architect"
-"code-review-standards","Code Review Standards","Universal review checklist, SOLID, complexity metrics","_gaia/dev/skills/code-review-standards.md","all-dev"
-"documentation-standards","Documentation Standards","README templates, ADRs, inline comments, API docs","_gaia/dev/skills/documentation-standards.md","all-dev,tech-writer,analyst,pm"
-"security-basics","Security Basics","OWASP Top 10, input validation, secrets, CORS/CSRF","_gaia/dev/skills/security-basics.md","all-dev,architect,security,devops"

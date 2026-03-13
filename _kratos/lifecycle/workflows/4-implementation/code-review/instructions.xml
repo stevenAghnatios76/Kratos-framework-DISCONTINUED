@@ -1,0 +1,37 @@
+<workflow name="code-review">
+<critical>
+  <mandate>Story must be in review status before code review</mandate>
+  <mandate>Output must include machine-readable APPROVE or REQUEST_CHANGES</mandate>
+</critical>
+<step n="1" title="Load Story">
+  <action>Read story file, identify files changed</action>
+</step>
+<step n="2" title="Status Gate">
+  <action>Verify story is in 'review' status</action>
+  <check if="status != review">HALT: Story must be in review status</check>
+</step>
+<step n="3" title="Code Review">
+  <action>Review each changed file for: correctness, security, performance, readability, test coverage</action>
+</step>
+<step n="4" title="Generate Findings">
+  <action>List issues by severity: critical, warning, suggestion</action>
+</step>
+<step n="5" title="Decision">
+  <action>If no critical issues: verdict is APPROVE</action>
+  <action>If critical issues found: verdict is REQUEST_CHANGES</action>
+</step>
+<step n="6" title="Generate Output">
+  <template-output file="{implementation_artifacts}/{story_key}-review.md">
+    Generate review report with machine-readable verdict (APPROVE/REQUEST_CHANGES) and findings.
+  </template-output>
+</step>
+<step n="7" title="Update Review Gate and Transition">
+  <action>Read story file, locate Review Gate table</action>
+  <action>If APPROVE: update Code Review row status to PASSED, link report file</action>
+  <action>If REQUEST_CHANGES: update Code Review row status to FAILED, link report file, set story status to 'in-progress' in story file frontmatter</action>
+  <template-output file="{implementation_artifacts}/{story_key}.md">
+    Update story file Review Gate table with code review result and report link. If REQUEST_CHANGES, also update story status to in-progress.
+  </template-output>
+  <invoke-protocol name="review-gate-check" file="{project-root}/_kratos/core/protocols/review-gate-check.xml" />
+</step>
+</workflow>

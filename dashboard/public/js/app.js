@@ -1,4 +1,4 @@
-/* GAIA Dashboard — WebSocket client + DOM rendering */
+/* KRATOS Dashboard — WebSocket client + DOM rendering */
 
 (function () {
   'use strict';

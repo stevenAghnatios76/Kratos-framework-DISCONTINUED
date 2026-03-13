@@ -1,0 +1,40 @@
+<workflow name="create-story">
+<critical>
+  <mandate>Story files must include YAML frontmatter with key, status, dependencies</mandate>
+  <mandate>All acceptance criteria MUST use Given/When/Then format: "Given {context}, when {action}, then {expected result}"</mandate>
+  <mandate>Check web access availability if story references external APIs</mandate>
+</critical>
+<step n="1" title="Select Story">
+  <ask>Which story do you want to detail? (provide story key from sprint plan or epics)</ask>
+</step>
+<step n="2" title="Load Context">
+  <action>Read story summary from epics-and-stories.md</action>
+  <action>Read architecture.md for technical context</action>
+</step>
+<step n="3" title="Web Access Guard">
+  <check if="story_references_external_apis">Check if web tools available for API documentation lookup</check>
+  <check if="no_web_access">Note limitation in story file</check>
+</step>
+<step n="4" title="Elaborate Story">
+  <action>Expand acceptance criteria in Given/When/Then format: "Given {context}, when {action}, then {expected result}"</action>
+  <action>Add technical notes from architecture context</action>
+  <action>Define subtasks for implementation</action>
+</step>
+<step n="5" title="Definition of Done">
+  <action>Append DoD checklist: all AC met, tests pass, code reviewed, docs updated</action>
+</step>
+<step n="6" title="Generate Output">
+  <action>Read the story template from {project-root}/_kratos/lifecycle/templates/story-template.md</action>
+  <template-output file="{implementation_artifacts}/{story_key}-{story_title_slug}.md">
+    Generate story file following the story-template.md structure. The filename must use the story key and slugified title (e.g., 1.2-user-login.md). Fill all template sections: User Story, Acceptance Criteria, Tasks/Subtasks (linked to AC numbers), Dev Notes, Technical Notes, Dependencies, Test Scenarios, Project Structure Notes, References, Dev Agent Record, and Estimate.
+  </template-output>
+</step>
+<step n="7" title="Update Sprint Status">
+  <action>Read {implementation_artifacts}/sprint-status.yaml</action>
+  <action>Find the story entry matching {story_key} and update its status to validating</action>
+  <action>If sprint-status.yaml does not exist, create it with the story entry set to validating</action>
+  <template-output file="{implementation_artifacts}/sprint-status.yaml">
+    Update the sprint status file with the story status set to validating.
+  </template-output>
+</step>
+</workflow>

@@ -1,0 +1,53 @@
+<workflow name="deployment-checklist">
+<critical>
+  <mandate>Every deployment must have a verified rollback plan</mandate>
+  <mandate>All approval gates must be explicitly confirmed</mandate>
+  <mandate>Never deploy without pre-deployment checks passing</mandate>
+</critical>
+<step n="1" title="Load Deployment Context">
+  <action>Read {planning_artifacts}/architecture.md — understand system components</action>
+  <action>Read {planning_artifacts}/infrastructure-design.md if available</action>
+  <action>Read {test_artifacts}/traceability-matrix.md — verify requirement coverage</action>
+  <action>Read {test_artifacts}/ci-setup.md — verify CI quality gates</action>
+  <action>Read {planning_artifacts}/readiness-report.md — verify PASS status</action>
+  <action>Identify release scope: what stories, features, fixes are included</action>
+</step>
+<step n="2" title="Optional: Accessibility Testing">
+  <ask>Would you like to create an accessibility test plan? This spawns a subagent in a separate context. Recommended for frontend/user-facing applications. (yes / skip)</ask>
+  <action>If yes: spawn a subagent using the Agent tool: "Load {project-root}/_kratos/core/engine/workflow.xml, then process {project-root}/_kratos/testing/workflows/accessibility-testing/workflow.yaml as workflow-config. Run in YOLO mode. Follow the workflow engine instructions EXACTLY."</action>
+  <action>If skip: accessibility testing can be set up anytime later with /kratos-a11y-testing</action>
+</step>
+<step n="3" title="Pre-Deployment Checks">
+  <action>Verify DB migrations are tested and reversible</action>
+  <action>Confirm feature flags are configured correctly</action>
+  <action>Check configuration changes are applied to target environment</action>
+  <action>Verify secrets rotation is complete if required</action>
+</step>
+<step n="4" title="Dependency Verification">
+  <action>Confirm external service availability (APIs, databases, caches)</action>
+  <action>Verify API compatibility with consumers</action>
+  <action>Check third-party service SLAs and maintenance windows</action>
+</step>
+<step n="5" title="Rollback Readiness">
+  <action>Verify rollback plan exists and is documented</action>
+  <action>Confirm rollback has been tested in staging</action>
+  <action>Verify DB migration rollback scripts work</action>
+  <action>Define rollback trigger criteria</action>
+</step>
+<step n="6" title="Approval Gates">
+  <action>Verify readiness-report.md status is PASS — if not PASS, HALT deployment</action>
+  <action>Verify traceability-matrix.md coverage is complete — flag gaps as blocking</action>
+  <action>Verify ci-setup.md quality gates are enforced (not advisory-only)</action>
+  <ask>QA sign-off: confirm all acceptance tests pass and no critical bugs are open. Enter CONFIRMED or provide blocking issue.</ask>
+  <check if="qa_signoff != CONFIRMED">HALT: QA sign-off is required before deployment.</check>
+  <ask>Security sign-off: confirm security review is complete with no critical findings. Enter CONFIRMED or provide blocking findings.</ask>
+  <check if="security_signoff != CONFIRMED">HALT: Security sign-off is required before deployment.</check>
+  <ask>Stakeholder approval: confirm release scope is approved. Enter CONFIRMED.</ask>
+  <check if="stakeholder_approval != CONFIRMED">HALT: Stakeholder approval required before deployment.</check>
+</step>
+<step n="7" title="Generate Checklist">
+  <template-output file="{implementation_artifacts}/deployment-checklist-{date}.md">
+    Generate deployment checklist with: pre-deployment checks, dependency status, rollback readiness, approval gates, go/no-go recommendation.
+  </template-output>
+</step>
+</workflow>

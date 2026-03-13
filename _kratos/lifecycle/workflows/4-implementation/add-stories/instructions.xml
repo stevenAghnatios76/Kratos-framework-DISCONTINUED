@@ -1,0 +1,62 @@
+<workflow name="add-stories">
+<critical>
+  <mandate>New stories MUST follow the exact format used in existing epics-and-stories.md</mandate>
+  <mandate>Story IDs must not collide with existing story IDs</mandate>
+  <mandate>Append to existing content — never overwrite existing stories</mandate>
+</critical>
+
+<step n="1" title="Load Existing Epics and Stories">
+  <action>Read {planning_artifacts}/epics-and-stories.md</action>
+  <action>Parse all existing epic names and story IDs to avoid collisions</action>
+  <action>Identify the highest story ID per epic for numbering continuation</action>
+</step>
+
+<step n="2" title="Identify New Requirements">
+  <ask>What new stories need to be added? Describe the requirements.</ask>
+  <ask>Do these belong to an existing epic, or is a new epic needed?</ask>
+  <ask>Is this linked to a change request? If so, provide the CR ID.</ask>
+  <action>Read relevant sections of {planning_artifacts}/prd.md for context</action>
+  <action>Read relevant sections of {planning_artifacts}/architecture.md for technical context</action>
+</step>
+
+<step n="3" title="Define New Stories">
+  <action>For each new story: title, description, acceptance criteria, size (S/M/L/XL)</action>
+  <action>Use format: "As a [user], I want to [action] so that [benefit]"</action>
+  <action>Assign story IDs continuing from highest existing ID in the target epic</action>
+  <action>If new epic needed: create epic header with name, description, goal, success criteria</action>
+</step>
+
+<step n="4" title="Apply Risk Levels and Dependencies">
+  <action>If {test_artifacts}/test-plan.md exists: apply risk levels to new stories</action>
+  <action>Declare depends_on and blocks — check against ALL existing stories</action>
+  <action>Assign priority: P0/P1/P2</action>
+  <action>Verify no circular dependencies introduced</action>
+</step>
+
+<step n="5" title="Append to Epics and Stories">
+  <action>If adding to existing epic: append after the last story in that epic</action>
+  <action>If new epic: append entire epic section at end of document</action>
+  <action>Add a change log entry at top: "## Change Log" with date, CR ID, stories added</action>
+  <template-output file="{planning_artifacts}/epics-and-stories.md">
+    Append new stories to existing epics-and-stories.md. Each new story formatted as:
+    ### Story {epic-N}-{story-N}: {Title}
+    - Epic: {epic name}
+    - Priority: {P0/P1/P2}
+    - Size: {S/M/L/XL}
+    - Risk: {high/medium/low}
+    - Depends on: [{story-ids}]
+    - Blocks: [{story-ids}]
+    - Source: CR-{cr_id} (if applicable)
+    - Acceptance Criteria:
+      - AC1: {criteria}
+    Prepend a Change Log entry if not already present.
+  </template-output>
+</step>
+
+<step n="6" title="Next Steps">
+  <action>Report stories added: list new story IDs and their epics</action>
+  <action>If stories should enter current sprint: "Run /kratos-correct-course to inject into sprint"</action>
+  <action>If stories should wait: "Stories are in backlog. Run /kratos-sprint-plan for next sprint."</action>
+  <action>For each new story: "Run /kratos-create-story {story_key} to elaborate before development"</action>
+</step>
+</workflow>

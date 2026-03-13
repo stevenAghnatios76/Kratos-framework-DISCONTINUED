@@ -1,0 +1,13 @@
+name: innovation-strategy
+description: 'Identify disruption opportunities and architect business model innovation'
+module: creative
+agent: innovation-strategist
+config_resolved: "{project-root}/_kratos/creative/.resolved/innovation-strategy.yaml"
+config_source: "{project-root}/_kratos/creative/config.yaml"
+installed_path: "{project-root}/_kratos/creative/workflows/innovation-strategy"
+instructions: "{installed_path}/instructions.xml"
+validation: "{installed_path}/checklist.md"
+output:
+  primary: "{creative_artifacts}/innovation-strategy-{date}.md"
+data_files:
+  frameworks: "{data_path}/innovation-frameworks.csv"

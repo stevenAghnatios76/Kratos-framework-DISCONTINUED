@@ -316,7 +316,7 @@ function watchStatsCache() {
 const PORT = parseInt(process.env.PORT, 10) || DEFAULT_PORT;
 
 server.listen(PORT, () => {
-  console.log(`\n  GAIA Dashboard running at http://localhost:${PORT}\n`);
+  console.log(`\n  KRATOS Dashboard running at http://localhost:${PORT}\n`);
   console.log(`  Watching: ${CLAUDE_DIR}`);
   console.log(`  Press Ctrl+C to stop\n`);
 

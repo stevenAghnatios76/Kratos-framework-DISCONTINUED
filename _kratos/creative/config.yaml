@@ -1,0 +1,8 @@
+# Creative module config — inherits global
+inherits: "{project-root}/_kratos/_config/global.yaml"
+
+module_name: "creative"
+module_version: "1.0.0"
+
+creative_artifacts: "{project-root}/docs/creative-artifacts"
+data_path: "{project-root}/_kratos/creative/data"

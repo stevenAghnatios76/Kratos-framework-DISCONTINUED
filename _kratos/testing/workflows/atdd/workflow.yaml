@@ -1,0 +1,11 @@
+name: atdd
+description: 'Generate failing acceptance tests using TDD cycle'
+module: testing
+agent: test-architect
+config_resolved: "{project-root}/_kratos/testing/.resolved/atdd.yaml"
+config_source: "{project-root}/_kratos/testing/config.yaml"
+installed_path: "{project-root}/_kratos/testing/workflows/atdd"
+instructions: "{installed_path}/instructions.xml"
+validation: "{installed_path}/checklist.md"
+output:
+  primary: "{test_artifacts}/atdd-{story-key}.md"

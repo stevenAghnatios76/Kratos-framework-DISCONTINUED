@@ -1,0 +1,8 @@
+# Core module config — inherits global
+inherits: "{project-root}/_kratos/_config/global.yaml"
+
+module_name: "core"
+module_version: "1.7.0"
+
+engine_path: "{project-root}/_kratos/core/engine/workflow.xml"
+tasks_path: "{project-root}/_kratos/core/tasks"

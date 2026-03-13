@@ -1,0 +1,40 @@
+<workflow name="test-review">
+<critical>
+  <mandate>Check for flaky test patterns — they are critical technical debt</mandate>
+  <mandate>Story must be in review status before test review</mandate>
+  <mandate>Output must include machine-readable PASSED or FAILED verdict</mandate>
+</critical>
+<step n="1" title="Load Story and Tests">
+  <action>Read story file, identify files changed</action>
+  <action>Read test files for the target area</action>
+</step>
+<step n="2" title="Status Gate">
+  <action>Verify story is in 'review' status</action>
+  <check if="status != review">HALT: Story must be in review status before test review</check>
+</step>
+<step n="3" title="Quality Assessment">
+  <action>Check: determinism, isolation, naming, assertions, coverage</action>
+</step>
+<step n="4" title="Flakiness Analysis">
+  <action>Identify potentially flaky tests: timing, state, network dependencies</action>
+</step>
+<step n="5" title="Verdict">
+  <action>If no critical quality issues or flaky tests found: verdict is PASSED</action>
+  <action>If critical quality issues or flaky tests found: verdict is FAILED — list blocking findings</action>
+</step>
+<step n="6" title="Generate Report">
+  <action>Generate test review report with quality assessment and flakiness findings</action>
+  <template-output file="{test_artifacts}/test-review.md">
+    Generate test review report with quality assessment, flakiness findings, and machine-readable verdict (PASSED/FAILED).
+  </template-output>
+</step>
+<step n="7" title="Update Review Gate and Transition">
+  <action>Read story file, locate Review Gate table</action>
+  <action>If PASSED: update Test Review row status to PASSED, link report file</action>
+  <action>If FAILED: update Test Review row status to FAILED, link report file, set story status to 'in-progress' in story file frontmatter</action>
+  <template-output file="{implementation_artifacts}/{story_key}.md">
+    Update story file Review Gate table with test review result and report link. If FAILED, also update story status to in-progress.
+  </template-output>
+  <invoke-protocol name="review-gate-check" file="{project-root}/_kratos/core/protocols/review-gate-check.xml" />
+</step>
+</workflow>

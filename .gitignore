@@ -1,9 +1,9 @@
-# GAIA Framework — runtime artifacts
-_gaia/_memory/checkpoints/*.yaml
-_gaia/_memory/*-sidecar/*.md
-_gaia/_memory/*-sidecar/*.yaml
-_gaia/**/.resolved/*.yaml
-!_gaia/**/.resolved/.gitkeep
+# Kratos Framework — runtime artifacts
+_kratos/_memory/checkpoints/*.yaml
+_kratos/_memory/*-sidecar/*.md
+_kratos/_memory/*-sidecar/*.yaml
+_kratos/**/.resolved/*.yaml
+!_kratos/**/.resolved/.gitkeep
 
 # Internal planning docs — not for distribution
 docs/phases/

@@ -1,0 +1,9 @@
+name,displayName,description,path,applicable_agents
+"git-workflow","Git Workflow","Branching, PRs, conventional commits, conflict resolution","_kratos/dev/skills/git-workflow.md","all-dev,sm,devops"
+"api-design","API Design","REST, GraphQL, OpenAPI, versioning, error standards","_kratos/dev/skills/api-design.md","all-dev,architect,data-engineer"
+"database-design","Database Design","Schema, migrations, indexing, ORM patterns","_kratos/dev/skills/database-design.md","senior-backend,senior-fullstack,architect,data-engineer"
+"docker-workflow","Docker Workflow","Multi-stage builds, compose, security scanning","_kratos/dev/skills/docker-workflow.md","senior-frontend,senior-backend,senior-fullstack,devops"
+"testing-patterns","Testing Patterns","TDD cycle, unit/integration testing, test doubles","_kratos/dev/skills/testing-patterns.md","all-dev,qa,test-architect"
+"code-review-standards","Code Review Standards","Universal review checklist, SOLID, complexity metrics","_kratos/dev/skills/code-review-standards.md","all-dev"
+"documentation-standards","Documentation Standards","README templates, ADRs, inline comments, API docs","_kratos/dev/skills/documentation-standards.md","all-dev,tech-writer,analyst,pm"
+"security-basics","Security Basics","OWASP Top 10, input validation, secrets, CORS/CSRF","_kratos/dev/skills/security-basics.md","all-dev,architect,security,devops"

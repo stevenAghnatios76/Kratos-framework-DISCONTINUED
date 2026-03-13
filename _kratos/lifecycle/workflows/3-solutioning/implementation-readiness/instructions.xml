@@ -1,0 +1,126 @@
+<workflow name="implementation-readiness">
+<critical>
+  <mandate>Output must include machine-readable PASS/FAIL gate report</mandate>
+  <mandate>Check ALL artifacts — do not stop at first failure</mandate>
+</critical>
+<step n="1" title="Load All Artifacts">
+  <action>Load PRD, UX Design, Architecture, Epics/Stories</action>
+  <action>Load {test_artifacts}/traceability-matrix.md — extract requirement coverage summary</action>
+  <action>Load {test_artifacts}/ci-setup.md — extract pipeline quality gates summary</action>
+  <action>Load {test_artifacts}/test-plan.md if exists — extract risk assessment</action>
+  <action>Note any missing artifacts immediately</action>
+</step>
+<step n="2" title="Completeness Check">
+  <action>Verify each document exists and has all required sections</action>
+  <action>PRD: overview, personas, requirements, NFRs, journeys, data, integrations, constraints, criteria</action>
+  <action>Architecture: stack, system design, data, API, infrastructure</action>
+  <action>Epics: at least 1 epic with stories, all stories have AC</action>
+</step>
+<step n="3" title="Consistency Check">
+  <action>Verify stories trace to PRD requirements</action>
+  <action>Verify architecture covers all functional areas</action>
+  <action>Verify prd.md contains a "## Review Findings Incorporated" section — confirms adversarial review findings were consumed</action>
+  <action>Verify architecture.md contains a "## Review Findings Incorporated" section — confirms adversarial review findings were consumed</action>
+  <action>Check for terminology consistency across documents</action>
+</step>
+<step n="4" title="Cross-Artifact Contradiction Check">
+  <action>Load decision-authority-matrix from {project-root}/_kratos/core/protocols/agent-specification-protocol.md — extract domain/authority mappings for contradiction reporting</action>
+  <action>CHECK 1 — Architecture vs Threat Model (skip if {planning_artifacts}/threat-model.md does not exist — log "INFO: threat model not available, architecture/security cross-check skipped"):
+    Extract security requirements (SR-*) and mitigations from threat-model.md.
+    For each SR-*, verify architecture.md contains a component, design decision, or ADR that addresses it.
+    Flag unaddressed SR-* items as contradictions. Authority: security (Zara). Severity: BLOCKING if Critical/High, WARNING if Medium/Low.</action>
+  <action>CHECK 2 — Architecture vs Infrastructure Design (skip if {planning_artifacts}/infrastructure-design.md does not exist — log "INFO: infrastructure design not available, topology cross-check skipped"):
+    Compare deployment topology in infrastructure-design.md against system architecture section in architecture.md.
+    Flag mismatches: architectural style vs deployment model, service boundaries vs container boundaries, communication patterns vs networking design.
+    Authority: deployment-topology decisions → Soren, component-boundary decisions → Theo. Severity: BLOCKING.</action>
+  <action>CHECK 3 — Architecture vs Stories:
+    Extract architecture components from architecture.md (services, databases, APIs, external integrations).
+    Scan epics-and-stories.md for component references.
+    Flag: (a) stories referencing components not in architecture — BLOCKING, (b) architecture components with no corresponding stories — WARNING.</action>
+  <action>CHECK 4 — PRD NFRs vs Architecture:
+    Extract quantified NFR targets from prd.md (performance, availability, scalability, security).
+    Verify each has a corresponding architecture design decision or ADR.
+    Flag unaddressed NFRs. Authority: architect (Theo). Severity: WARNING for non-security NFRs, BLOCKING for security NFRs.</action>
+  <action>CHECK 5 — Threat Model vs Stories (skip if threat-model.md does not exist):
+    Extract Critical and High risk security requirements (SR-*) from threat-model.md.
+    Verify each has at least one story whose acceptance criteria addresses it.
+    Flag unaddressed Critical/High SR-* items. Authority: security (Zara). Severity: BLOCKING.</action>
+  <action>CHECK 6 — Auth Strategy Alignment:
+    Extract auth strategy from architecture.md API Design section.
+    Compare against: (a) auth requirements in prd.md, (b) auth-related mitigations in threat-model.md (if exists).
+    Flag mismatches in auth mechanism, session management, or token strategy. Authority: security (Zara). Severity: BLOCKING.</action>
+  <action>Record all contradictions in a structured list:
+    For each: contradiction_id (C-1, C-2, ...), type, source_artifacts, description, authority_agent, severity (BLOCKING/WARNING), recommended_resolution.
+    Count BLOCKING contradictions. If count > 0: set contradiction_check = FAIL. Else: PASS.</action>
+</step>
+<step n="5" title="TEA Readiness">
+  <action>Is test strategy implied or defined?</action>
+  <action>Are acceptance criteria testable and automatable?</action>
+  <action>Are NFR targets quantified for performance testing?</action>
+</step>
+<step n="6" title="Test Infrastructure Readiness">
+  <action>Verify traceability-matrix.md covers all PRD requirements — flag uncovered requirements as blocking</action>
+  <action>Verify ci-setup.md defines enforced quality gates (coverage %, pass rate thresholds) — flag advisory-only gates as a warning</action>
+  <action>Verify test-plan.md exists (from /kratos-test-design) — flag absence as blocking</action>
+  <action>Record findings as: test_plan_exists: true/false, traceability_complete: true/false, ci_gates_enforced: true/false</action>
+</step>
+<step n="7" title="Security Readiness">
+  <action>Are security requirements documented in PRD?</action>
+  <action>Is authentication/authorization defined in architecture?</action>
+  <action>Are data privacy requirements addressed?</action>
+</step>
+<step n="8" title="Operational Readiness">
+  <action>Rollback: Is a rollback procedure documented in architecture or release plan? Can the deployment be reversed without data loss?</action>
+  <action>Observability: Are logging, metrics, and alerting requirements defined? Are health-check endpoints specified?</action>
+  <action>Release strategy: Is the deployment approach defined (blue-green, canary, rolling)? Does the infrastructure design support it?</action>
+</step>
+<step n="9" title="Brownfield Completeness Check" optional="true" condition="brownfield-onboarding.md exists in {planning_artifacts}">
+  <action>Skip this step if {planning_artifacts}/brownfield-onboarding.md does not exist. This step only applies to brownfield projects.</action>
+  <action>Verify dependency-map.md exists and has: external services, infrastructure, library dependencies, Mermaid graph</action>
+  <action>Verify nfr-assessment.md exists at {test_artifacts}/nfr-assessment.md and has: baseline summary table with real values (not placeholders)</action>
+  <action>If APIs were detected (check project-documentation.md for has_apis flag): verify api-documentation.md exists and has OpenAPI spec and endpoint inventory</action>
+  <action>If events were detected (check project-documentation.md for has_events flag): verify event-catalog.md exists and has produced/consumed event tables</action>
+  <action>If frontend was detected (check project-documentation.md for has_frontend flag): verify ux-design.md exists and has accessibility assessment</action>
+  <action>Verify architecture.md has as-is and target sections with Mermaid diagrams</action>
+  <action>Verify PRD NFR section references nfr-assessment.md baselines (not blank targets)</action>
+  <action>Verify brownfield-onboarding.md links to all generated artifacts</action>
+  <action>Verify {planning_artifacts}/dependency-audit-*.md exists — required dependency audit was completed</action>
+</step>
+<step n="10" title="Generate Gate Report">
+  <template-output file="{planning_artifacts}/readiness-report.md">
+    Generate readiness report with YAML frontmatter:
+    ---
+    status: PASS or FAIL
+    gate_results:
+      prd_complete: true/false
+      ux_complete: true/false
+      architecture_complete: true/false
+      stories_complete: true/false
+      contradiction_check: PASS/FAIL
+      tea_ready: true/false
+      test_plan_exists: true/false
+      traceability_complete: true/false
+      ci_gates_enforced: true/false
+      security_documented: true/false
+      rollback_feasible: true/false
+      observability_ready: true/false
+      release_strategy_defined: true/false
+      brownfield_complete: true/false/skipped
+    contradictions_found: {count}
+    contradictions_blocking: {blocking_count}
+    blocking_issues:
+      - "issue description"
+    ---
+    Then detailed findings for each gate.
+    Include a "## Contradictions" section listing each detected contradiction:
+    | ID | Type | Source Artifacts | Severity | Authority | Description | Recommended Resolution |
+    If no contradictions found, state "No cross-artifact contradictions detected."
+    If checks were skipped (missing optional artifacts), list them as INFO notes.
+  </template-output>
+</step>
+<step n="11" title="Optional: Adversarial Review">
+  <ask>Would you like to run an adversarial review on the readiness report? This spawns a subagent in a separate context. Strongly recommended before committing to build. (yes / skip)</ask>
+  <action>If yes: spawn a subagent using the Agent tool: "Load {project-root}/_kratos/core/tasks/review-adversarial.xml. Read its entire contents. Target: {planning_artifacts}/readiness-report.md. Follow the task instructions EXACTLY."</action>
+  <action>If skip: adversarial review can be run anytime later with /kratos-adversarial</action>
+</step>
+</workflow>

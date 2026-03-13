@@ -1,0 +1,13 @@
+name: accessibility-testing
+description: 'Create accessibility test plan and automated checks for WCAG compliance'
+module: testing
+agent: test-architect
+config_resolved: "{project-root}/_kratos/testing/.resolved/accessibility-testing.yaml"
+config_source: "{project-root}/_kratos/testing/config.yaml"
+installed_path: "{project-root}/_kratos/testing/workflows/accessibility-testing"
+instructions: "{installed_path}/instructions.xml"
+validation: "{installed_path}/checklist.md"
+required_skill_sections:
+  - "security-basics:owasp-top-10"
+output:
+  primary: "{test_artifacts}/accessibility-report-{date}.md"

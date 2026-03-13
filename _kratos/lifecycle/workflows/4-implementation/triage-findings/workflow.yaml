@@ -1,0 +1,15 @@
+name: triage-findings
+description: 'Triage development findings into backlog stories'
+module: lifecycle
+agent: sm
+config_resolved: "{project-root}/_kratos/lifecycle/.resolved/triage-findings.yaml"
+config_source: "{project-root}/_kratos/lifecycle/config.yaml"
+installed_path: "{project-root}/_kratos/lifecycle/workflows/4-implementation/triage-findings"
+instructions: "{installed_path}/instructions.xml"
+validation: "{installed_path}/checklist.md"
+on_error:
+  missing_file: "ask_user"
+  unresolved_variable: "halt"
+
+output:
+  primary: "{implementation_artifacts}/sprint-status.yaml"

@@ -1,0 +1,15 @@
+name: domain-research
+description: 'Conduct domain and industry research'
+module: lifecycle
+agent: analyst
+config_resolved: "{project-root}/_kratos/lifecycle/.resolved/domain-research.yaml"
+config_source: "{project-root}/_kratos/lifecycle/config.yaml"
+installed_path: "{project-root}/_kratos/lifecycle/workflows/1-analysis/domain-research"
+instructions: "{installed_path}/instructions.xml"
+validation: "{installed_path}/checklist.md"
+on_error:
+  missing_file: "ask_user"
+  unresolved_variable: "halt"
+
+output:
+  primary: "{planning_artifacts}/domain-research.md"

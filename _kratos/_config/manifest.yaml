@@ -1,0 +1,24 @@
+# Kratos Framework — Module Manifest
+# Lists all installed modules and their metadata.
+
+modules:
+  - name: core
+    version: "1.7.0"
+    path: "_kratos/core"
+    type: built-in
+  - name: lifecycle
+    version: "1.21.0"
+    path: "_kratos/lifecycle"
+    type: built-in
+  - name: dev
+    version: "1.0.2"
+    path: "_kratos/dev"
+    type: built-in
+  - name: creative
+    version: "1.0.0"
+    path: "_kratos/creative"
+    type: built-in
+  - name: testing
+    version: "1.5.0"
+    path: "_kratos/testing"
+    type: built-in

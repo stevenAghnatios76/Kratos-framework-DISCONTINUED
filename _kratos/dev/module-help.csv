@@ -1,0 +1,7 @@
+name,code,command,description,agent
+"senior-frontend","agent-senior-frontend","kratos-agent-senior-frontend","Senior frontend developer for UI, design systems, and client-side architecture","Avery"
+"senior-backend","agent-senior-backend","kratos-agent-senior-backend","Senior backend developer for APIs, services, and data workflows","Rowan"
+"senior-fullstack","agent-senior-fullstack","kratos-agent-senior-fullstack","Senior fullstack developer for cross-cutting implementation and rapid delivery","Jordan"
+"dev-story","dev-story","kratos-dev-story","Implement a user story (use with any dev agent)","dev-*"
+"code-review","code-review","kratos-code-review","Perform code review (use with any dev agent)","dev-*"
+"quick-dev","quick-dev","kratos-quick-dev","Implement a quick spec (use with any dev agent)","dev-*"

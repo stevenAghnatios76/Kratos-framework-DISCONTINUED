@@ -1,7 +1,7 @@
 {
-  "name": "gaia-dashboard",
+  "name": "kratos-dashboard",
   "version": "1.0.0",
-  "description": "Live Claude Code usage tracking dashboard for GAIA Framework",
+  "description": "Live AI coding assistant usage tracking dashboard for Kratos Framework",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

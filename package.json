@@ -1,22 +1,23 @@
 {
-  "name": "gaia-framework",
+  "name": "kratos-framework",
   "version": "1.27.4",
-  "description": "GAIA — Generative Agile Intelligence Architecture installer",
+  "description": "KRATOS — Generative Agile Intelligence Architecture installer for Claude Code and GitHub Copilot",
   "bin": {
-    "gaia-framework": "./bin/gaia-framework.js"
+    "kratos-framework": "./bin/kratos-framework.js"
   },
   "keywords": [
-    "gaia",
+    "kratos",
     "ai",
     "framework",
     "claude",
+    "copilot",
     "agent",
     "workflow",
     "installer"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/jlouage/Gaia-framework.git"
+    "url": "https://github.com/jlouage/Kratos-framework.git"
   },
   "license": "AGPL-3.0",
   "scripts": {
@@ -27,6 +28,6 @@
   },
   "files": [
     "bin/",
-    "gaia-install.sh"
+    "kratos-install.sh"
   ]
 }
