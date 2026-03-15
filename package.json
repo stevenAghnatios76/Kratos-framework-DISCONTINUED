@@ -1,6 +1,6 @@
 {
   "name": "kratos-framework",
-  "version": "1.27.56",
+  "version": "1.27.57",
   "description": "KRATOS — Generative Agile Intelligence Architecture installer for Claude Code and GitHub Copilot",
   "bin": {
     "kratos-framework": "bin/kratos-framework.js"

@@ -6,7 +6,7 @@ set -euo pipefail
 # Installs, updates, validates, and reports on KRATOS installations.
 # ─────────────────────────────────────────────────────────────────────────────
 
-readonly VERSION="1.27.56"
+readonly VERSION="1.27.57"
 readonly DEFAULT_GITHUB_REPO="https://github.com/stevenAghnatios76/Kratos-framework.git"
 readonly MANIFEST_REL="_kratos/_config/manifest.yaml"
 
