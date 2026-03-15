@@ -1,6 +1,6 @@
 # KRATOS — Generative Agile Intelligence Architecture
 
-[![Framework](https://img.shields.io/badge/framework-v1.27.4-blue)]()
+[![Framework](https://img.shields.io/badge/framework-v1.27.56-blue)]()
 [![License](https://img.shields.io/badge/license-AGPL--3.0-green)]()
 [![Agents](https://img.shields.io/badge/agents-15-purple)]()
 [![Workflows](https://img.shields.io/badge/workflows-64-orange)]()
@@ -443,7 +443,7 @@ The single source of truth is `_kratos/_config/global.yaml`:
 
 ```yaml
 framework_name: "KRATOS"
-framework_version: "1.27.4"
+framework_version: "1.27.56"
 user_name: "your-name"
 project_name: "your-project"
 ```

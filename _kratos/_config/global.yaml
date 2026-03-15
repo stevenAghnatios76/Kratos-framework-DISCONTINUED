@@ -3,7 +3,7 @@
 # After modifying this file, run /kratos-build-configs to regenerate resolved configs.
 
 framework_name: "KRATOS"
-framework_version: "1.27.4"
+framework_version: "1.27.56"
 
 # User settings
 user_name: "Jlouage"
