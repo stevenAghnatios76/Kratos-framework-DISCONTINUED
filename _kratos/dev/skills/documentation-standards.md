@@ -79,6 +79,12 @@ Specify the project license.
 - Include a "Quick Start" path that gets developers running in under 5 minutes
 - Add badges for CI status, test coverage, and version only if meaningful
 
+### Markdown Size Rule
+- No markdown file may exceed 1000 lines
+- When a document approaches the limit, split it into focused companion files instead of appending indefinitely
+- When the limit is crossed, shard into at least 2 markdown files and keep every resulting file at or under 1000 lines
+- Prefer an `index.md` plus section-based shard files for navigation
+
 <!-- SECTION: adr-format -->
 ## Architecture Decision Records
 

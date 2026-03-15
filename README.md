@@ -33,7 +33,7 @@ Using Claude Code or GitHub Copilot alone, you prompt an AI assistant. With KRAT
 ## Editor Support
 
 - Claude Code: full support, including `/kratos-*` slash commands and model-specific routing.
-- GitHub Copilot: supported through repository instructions in `.github/copilot-instructions.md`. Copilot does not use Claude slash-command frontmatter, so use the documented KRATOS workflows and file conventions rather than expecting slash-command model routing.
+- GitHub Copilot: supported through repository instructions in `.github/copilot-instructions.md`, Copilot prompt files in `.github/prompts/`, and the optional custom agent in `.github/agents/`. Copilot does not use Claude slash-command frontmatter, so KRATOS exposes Copilot-native prompt files for the main entry points.
 
 ---
 
@@ -65,6 +65,20 @@ Or launch the orchestrator to explore all capabilities:
 ```bash
 /kratos
 ```
+
+### GitHub Copilot in VS Code
+
+Open Chat in VS Code and use the workspace prompt files:
+
+```text
+/kratos
+/kratos-help
+/kratos-quick-spec
+/kratos-quick-dev
+/kratos-dev-story
+```
+
+These prompt files live in `.github/prompts/` and work in GitHub Copilot chat without Claude-specific slash-command frontmatter.
 
 ### 5 essential commands
 
@@ -120,9 +134,10 @@ bash kratos-install.sh init --minimal .
 3. Creates memory sidecar directories
 4. Prompts for project name and user name → writes to `global.yaml`
 5. Copies `CLAUDE.md` to your project root
-6. Installs 104 slash commands to `.claude/commands/`
-7. Appends KRATOS entries to `.gitignore`
-8. Supports a `--minimal` profile that installs only the core engine, quick-flow workflows, and senior developer entrypoints
+6. Installs GitHub Copilot customizations to `.github/` (`copilot-instructions.md`, prompts, optional agents)
+7. Installs 102 slash commands to `.claude/commands/`
+8. Appends KRATOS entries to `.gitignore`
+9. Supports a `--minimal` profile that installs only the core engine, quick-flow workflows, and senior developer entrypoints
 
 ### Updating
 
@@ -429,7 +444,7 @@ _kratos/
 | Agents | 15 with distinct personas (25 in [GAIA](https://github.com/jlouage/Gaia-framework)) |
 | Workflows | 64 across 5 lifecycle phases |
 | Standalone tasks | 15 (reviews, audits, utilities) |
-| Slash commands | 104 |
+| Slash commands | 102 |
 | Shared skills | 8 with 47 loadable sections |
 | Knowledge fragments | 45 |
 | Document templates | 18 |

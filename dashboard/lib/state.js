@@ -46,7 +46,7 @@ class DashboardState {
 
     this.tools = {};   // { 'Bash': { calls: 5, totalMs: 225 }, ... }
 
-    this.agents = {};  // { 'Explore': { calls: 2, toolCalls: 10, totalToolMs: 1200, lastSeen: ts }, ... }
+    this.agents = {};  // { 'Explore': { calls, requestCount, tokens, cost, ... }, ... }
     this.agentActivity = []; // newest first: [{ timestamp, agent, action, detail }]
 
     this.streaming = {
@@ -69,6 +69,9 @@ class DashboardState {
     this._seenRequestIds = new Set();
     this._seenTelemetryEventIds = new Set();
     this._telemetryCostByRequestId = new Map();
+    this._pendingSubagentsByToolUseId = new Map();
+    this._pendingAgentRegistrationsByToolUseId = new Map();
+    this._agentNameById = new Map();
   }
 
   /**
@@ -96,6 +99,10 @@ class DashboardState {
         return this._processToolUse(event);
       case 'agent_call':
         return this._processAgentCall(event);
+      case 'agent_spawn':
+        return this._processAgentSpawn(event);
+      case 'agent_registration':
+        return this._processAgentRegistration(event);
       case 'streaming_stall':
         return this._processStreamingStall(event);
       case 'context_size':
@@ -108,6 +115,8 @@ class DashboardState {
   }
 
   _processUsage(event) {
+    const agentName = this._resolveAgentName(event);
+
     // Dedup by requestId
     if (event.requestId) {
       if (this._seenRequestIds.has(event.requestId)) {
@@ -121,16 +130,22 @@ class DashboardState {
           this.tokens.cacheRead -= old.cacheRead;
           this.tokens.cacheWrite -= old.cacheWrite;
           this.cost.total -= old.cost;
-          this.requestLog[idx] = this._makeLogEntry(event);
+          if (old.model) {
+            this.models[old.model] = Math.max(0, (this.models[old.model] || 0) - 1);
+          }
+          if (old.agentName) {
+            this._adjustAgentUsage(old.agentName, old, -1);
+          }
+          this.requestLog[idx] = this._makeLogEntry(event, agentName);
         }
       } else {
         this._seenRequestIds.add(event.requestId);
         this.session.messages++;
-        this._addToLog(event);
+        this._addToLog(event, agentName);
       }
     } else {
       this.session.messages++;
-      this._addToLog(event);
+      this._addToLog(event, agentName);
     }
 
     if (!this.session.startTime) {
@@ -151,6 +166,18 @@ class DashboardState {
 
     this.models[event.model] = (this.models[event.model] || 0) + 1;
 
+    if (agentName) {
+      this._touchAgent(agentName, event.timestamp);
+      this._adjustAgentUsage(agentName, event, 1);
+      this._setAgentStatusFromStopReason(agentName, event.stopReason);
+      this._pushAgentActivity(
+        event.timestamp,
+        agentName,
+        'generated',
+        `${event.model} ${formatTokenSummary(event)}`
+      );
+    }
+
     return true;
   }
 
@@ -165,6 +192,8 @@ class DashboardState {
   }
 
   _processApiSuccess(event) {
+    const agentName = this._resolveAgentName(event);
+
     this.latency.lastDurationMs = event.durationMs;
     this.latency.lastTtftMs = event.ttftMs;
     this.latency.history.push(event.durationMs);
@@ -189,22 +218,26 @@ class DashboardState {
         const diff = event.costUSD - oldCost;
         if (Math.abs(diff) > 0.000001) {
           this.requestLog[idx].cost = event.costUSD;
+          this.requestLog[idx].durationMs = event.durationMs;
           this.cost.total += diff;
 
           const model = this.requestLog[idx].model;
           if (model) {
             this.cost.byModel[model] = (this.cost.byModel[model] || 0) + diff;
           }
+
+          if (this.requestLog[idx].agentName) {
+            this._adjustAgentCost(this.requestLog[idx].agentName, diff);
+            this.agents[this.requestLog[idx].agentName].lastDurationMs = event.durationMs;
+          }
         }
       }
     }
 
-    if (event.agentName) {
-      this._touchAgent(event.agentName, event.timestamp);
-      if (event.isAgentInvocation) {
-        this.agents[event.agentName].calls++;
-      }
-      this._pushAgentActivity(event.timestamp, event.agentName, 'completed', 'API response');
+    if (agentName) {
+      this._touchAgent(agentName, event.timestamp);
+      this.agents[agentName].lastDurationMs = event.durationMs;
+      this._pushAgentActivity(event.timestamp, agentName, 'completed', `API response (${event.durationMs || 0}ms)`);
     }
 
     return true;
@@ -218,11 +251,13 @@ class DashboardState {
     this.tools[name].calls++;
     this.tools[name].totalMs += event.durationMs;
 
-    if (event.agentName) {
-      this._touchAgent(event.agentName, event.timestamp);
-      this.agents[event.agentName].toolCalls++;
-      this.agents[event.agentName].totalToolMs += event.durationMs;
-      this._pushAgentActivity(event.timestamp, event.agentName, 'used tool', `${name} (${event.durationMs || 0}ms)`);
+    const agentName = this._resolveAgentName(event);
+    if (agentName) {
+      this._touchAgent(agentName, event.timestamp);
+      this.agents[agentName].toolCalls++;
+      this.agents[agentName].totalToolMs += event.durationMs;
+      this.agents[agentName].status = 'running';
+      this._pushAgentActivity(event.timestamp, agentName, 'used tool', `${name} (${event.durationMs || 0}ms)`);
     }
 
     return true;
@@ -232,7 +267,69 @@ class DashboardState {
     if (!event.agentName) return false;
     this._touchAgent(event.agentName, event.timestamp);
     this.agents[event.agentName].calls++;
+    this.agents[event.agentName].status = 'running';
     this._pushAgentActivity(event.timestamp, event.agentName, 'started', 'subagent call');
+    return true;
+  }
+
+  _processAgentSpawn(event) {
+    if (!event.agentName || !event.toolUseId) return false;
+    this._pendingSubagentsByToolUseId.set(event.toolUseId, {
+      agentName: event.agentName,
+      description: event.description || '',
+      prompt: event.prompt || '',
+      requestedModel: event.requestedModel || null,
+    });
+
+    this._touchAgent(event.agentName, event.timestamp);
+    this.agents[event.agentName].description = event.description || this.agents[event.agentName].description;
+    this.agents[event.agentName].promptPreview = summarizePrompt(event.prompt) || this.agents[event.agentName].promptPreview;
+    this.agents[event.agentName].requestedModel = event.requestedModel || this.agents[event.agentName].requestedModel;
+    this.agents[event.agentName].status = this.agents[event.agentName].status === 'idle' ? 'queued' : this.agents[event.agentName].status;
+
+    const pendingRegistration = this._pendingAgentRegistrationsByToolUseId.get(event.toolUseId);
+    if (pendingRegistration && pendingRegistration.agentId) {
+      this._linkAgentIdToName(pendingRegistration.agentId, event.agentName, pendingRegistration.timestamp || event.timestamp, {
+        description: event.description,
+        prompt: event.prompt || pendingRegistration.prompt,
+        requestedModel: event.requestedModel,
+      });
+      this._pendingAgentRegistrationsByToolUseId.delete(event.toolUseId);
+      this._pendingSubagentsByToolUseId.delete(event.toolUseId);
+    }
+
+    this._pushAgentActivity(event.timestamp, event.agentName, 'queued', event.description || 'subagent prepared');
+    return true;
+  }
+
+  _processAgentRegistration(event) {
+    if (!event.agentId) return false;
+
+    const pending = event.toolUseId ? this._pendingSubagentsByToolUseId.get(event.toolUseId) : null;
+    if (!pending && event.toolUseId) {
+      this._pendingAgentRegistrationsByToolUseId.set(event.toolUseId, {
+        agentId: event.agentId,
+        prompt: event.prompt || '',
+        timestamp: event.timestamp,
+      });
+      return false;
+    }
+
+    const agentName = pending && pending.agentName ? pending.agentName : this._agentNameById.get(event.agentId);
+    if (!agentName) return false;
+
+    this._linkAgentIdToName(event.agentId, agentName, event.timestamp, {
+      description: pending && pending.description ? pending.description : '',
+      prompt: (pending && pending.prompt) || event.prompt,
+      requestedModel: pending && pending.requestedModel ? pending.requestedModel : null,
+    });
+
+    if (event.toolUseId) {
+      this._pendingSubagentsByToolUseId.delete(event.toolUseId);
+      this._pendingAgentRegistrationsByToolUseId.delete(event.toolUseId);
+    }
+
+    this._pushAgentActivity(event.timestamp, agentName, 'attached', 'subagent session connected');
     return true;
   }
 
@@ -258,10 +355,13 @@ class DashboardState {
     return true;
   }
 
-  _makeLogEntry(event) {
+  _makeLogEntry(event, agentName = null) {
     return {
       timestamp: event.timestamp,
       requestId: event.requestId,
+      agentId: event.agentId || null,
+      agentName,
+      isSubagent: !!event.isSubagent,
       model: event.model,
       inputTokens: event.inputTokens,
       outputTokens: event.outputTokens,
@@ -277,9 +377,24 @@ class DashboardState {
     if (!this.agents[agentName]) {
       this.agents[agentName] = {
         calls: 0,
+        requestCount: 0,
         toolCalls: 0,
         totalToolMs: 0,
         lastSeen: null,
+        lastDurationMs: 0,
+        status: 'idle',
+        description: '',
+        promptPreview: '',
+        requestedModel: null,
+        agentIds: [],
+        tokens: {
+          input: 0,
+          output: 0,
+          cacheRead: 0,
+          cacheWrite: 0,
+        },
+        cost: 0,
+        models: {},
       };
     }
     this.agents[agentName].lastSeen = timestamp;
@@ -292,11 +407,149 @@ class DashboardState {
     }
   }
 
-  _addToLog(event) {
-    this.requestLog.unshift(this._makeLogEntry(event));
+  _addToLog(event, agentName = null) {
+    this.requestLog.unshift(this._makeLogEntry(event, agentName));
     if (this.requestLog.length > REQUEST_LOG_MAX) {
       this.requestLog.pop();
     }
+  }
+
+  _resolveAgentName(event) {
+    if (event.agentName) return event.agentName;
+    if (event.agentId && this._agentNameById.has(event.agentId)) {
+      return this._agentNameById.get(event.agentId);
+    }
+    return null;
+  }
+
+  _linkAgentIdToName(agentId, agentName, timestamp, metadata = {}) {
+    if (!agentId || !agentName) return;
+
+    this._agentNameById.set(agentId, agentName);
+    this._touchAgent(agentName, timestamp);
+
+    const agent = this.agents[agentName];
+    agent.status = 'running';
+    agent.description = metadata.description || agent.description;
+    agent.promptPreview = summarizePrompt(metadata.prompt) || agent.promptPreview;
+    agent.requestedModel = metadata.requestedModel || agent.requestedModel;
+    if (!agent.agentIds.includes(agentId)) {
+      agent.agentIds.push(agentId);
+    }
+
+    if (agentId !== agentName && this.agents[agentId]) {
+      this._mergeAgentRecords(agentId, agentName);
+    }
+  }
+
+  _mergeAgentRecords(fromName, toName) {
+    if (fromName === toName || !this.agents[fromName]) return;
+
+    this._touchAgent(toName, this.agents[fromName].lastSeen);
+    const source = this.agents[fromName];
+    const target = this.agents[toName];
+
+    target.calls += source.calls;
+    target.requestCount += source.requestCount;
+    target.toolCalls += source.toolCalls;
+    target.totalToolMs += source.totalToolMs;
+    target.lastSeen = target.lastSeen && source.lastSeen
+      ? (target.lastSeen > source.lastSeen ? target.lastSeen : source.lastSeen)
+      : (target.lastSeen || source.lastSeen);
+    target.lastDurationMs = Math.max(target.lastDurationMs || 0, source.lastDurationMs || 0);
+    target.description = target.description || source.description;
+    target.promptPreview = target.promptPreview || source.promptPreview;
+    target.requestedModel = target.requestedModel || source.requestedModel;
+    target.cost += source.cost || 0;
+    target.tokens.input += source.tokens.input || 0;
+    target.tokens.output += source.tokens.output || 0;
+    target.tokens.cacheRead += source.tokens.cacheRead || 0;
+    target.tokens.cacheWrite += source.tokens.cacheWrite || 0;
+
+    for (const [model, count] of Object.entries(source.models || {})) {
+      target.models[model] = (target.models[model] || 0) + count;
+    }
+
+    for (const agentId of source.agentIds || []) {
+      if (!target.agentIds.includes(agentId)) {
+        target.agentIds.push(agentId);
+      }
+      this._agentNameById.set(agentId, toName);
+    }
+
+    target.status = mergeAgentStatus(target.status, source.status);
+
+    for (const entry of this.requestLog) {
+      if (entry.agentName === fromName) {
+        entry.agentName = toName;
+      }
+    }
+
+    for (const activity of this.agentActivity) {
+      if (activity.agent === fromName) {
+        activity.agent = toName;
+      }
+    }
+
+    delete this.agents[fromName];
+  }
+
+  _adjustAgentUsage(agentName, event, direction) {
+    const agent = this.agents[agentName];
+    if (!agent) return;
+
+    agent.tokens.input = Math.max(0, agent.tokens.input + (event.inputTokens || 0) * direction);
+    agent.tokens.output = Math.max(0, agent.tokens.output + (event.outputTokens || 0) * direction);
+    agent.tokens.cacheRead = Math.max(0, agent.tokens.cacheRead + (event.cacheRead || 0) * direction);
+    agent.tokens.cacheWrite = Math.max(0, agent.tokens.cacheWrite + (event.cacheWrite || 0) * direction);
+    agent.cost = Math.max(0, agent.cost + (event.cost || 0) * direction);
+
+    if (event.requestId) {
+      agent.requestCount = Math.max(0, agent.requestCount + direction);
+    }
+
+    if (event.model) {
+      agent.models[event.model] = Math.max(0, (agent.models[event.model] || 0) + direction);
+      if (agent.models[event.model] === 0) {
+        delete agent.models[event.model];
+      }
+    }
+  }
+
+  _adjustAgentCost(agentName, diff) {
+    if (!agentName || !this.agents[agentName]) return;
+    this.agents[agentName].cost = Math.max(0, this.agents[agentName].cost + diff);
+  }
+
+  _setAgentStatusFromStopReason(agentName, stopReason) {
+    if (!agentName || !this.agents[agentName]) return;
+
+    if (stopReason === 'end_turn') {
+      this.agents[agentName].status = 'completed';
+      return;
+    }
+
+    if (stopReason === 'tool_use') {
+      this.agents[agentName].status = 'running';
+      return;
+    }
+
+    this.agents[agentName].status = this.agents[agentName].status === 'idle' ? 'running' : this.agents[agentName].status;
+  }
+
+  _buildSubagentSummary() {
+    const agents = Object.values(this.agents);
+    return {
+      totalAgents: agents.length,
+      activeAgents: agents.filter(agent => agent.status === 'running' || agent.status === 'queued').length,
+      completedAgents: agents.filter(agent => agent.status === 'completed').length,
+      totalCost: agents.reduce((sum, agent) => sum + agent.cost, 0),
+      totalRequests: agents.reduce((sum, agent) => sum + agent.requestCount, 0),
+      totalTokens: agents.reduce(
+        (sum, agent) => sum + agent.tokens.input + agent.tokens.output + agent.tokens.cacheRead + agent.tokens.cacheWrite,
+        0
+      ),
+    };
   }
 
   /**
@@ -323,6 +576,7 @@ class DashboardState {
       models: { ...this.models },
       tools: JSON.parse(JSON.stringify(this.tools)),
       agents: JSON.parse(JSON.stringify(this.agents)),
+      subagents: this._buildSubagentSummary(),
       agentActivity: this.agentActivity.slice(0, AGENT_ACTIVITY_MAX),
       streaming: { ...this.streaming },
       errors: { ...this.errors },
@@ -340,3 +594,23 @@ class DashboardState {
 }
 
 module.exports = { DashboardState };
+
+function summarizePrompt(prompt) {
+  if (!prompt || typeof prompt !== 'string') return '';
+  return prompt.replace(/\s+/g, ' ').trim().slice(0, 140);
+}
+
+function formatTokenSummary(event) {
+  return `${event.inputTokens || 0} in / ${event.outputTokens || 0} out`;
+}
+
+function mergeAgentStatus(left, right) {
+  const rank = {
+    idle: 0,
+    queued: 1,
+    running: 2,
+    completed: 3,
+  };
+
+  return (rank[right] || 0) > (rank[left] || 0) ? right : left;
+}

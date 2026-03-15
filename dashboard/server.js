@@ -9,7 +9,7 @@ const { WebSocketServer } = require('ws');
 const { DEFAULT_PORT, HEARTBEAT_INTERVAL_MS } = require('./lib/constants');
 const { DashboardState } = require('./lib/state');
 const { JsonlTailer, DirectoryWatcher, FileWatcher } = require('./lib/watcher');
-const { parseSessionLine } = require('./lib/parsers/session-parser');
+const { parseSessionEvents } = require('./lib/parsers/session-parser');
 const { parseTelemetryFile } = require('./lib/parsers/telemetry-parser');
 const { parseStatsCache } = require('./lib/parsers/stats-parser');
 
@@ -169,9 +169,11 @@ function tailSessionFile(filePath) {
   const tailer = new JsonlTailer(filePath, (lines) => {
     let changed = false;
     for (const line of lines) {
-      const event = parseSessionLine(line);
-      if (event && shouldProcessEvent(event, 'session') && state.processEvent(event)) {
-        changed = true;
+      const events = parseSessionEvents(line, { filePath }) || [];
+      for (const event of events) {
+        if (event && shouldProcessEvent(event, 'session') && state.processEvent(event)) {
+          changed = true;
+        }
       }
     }
     if (changed) broadcastDelta();

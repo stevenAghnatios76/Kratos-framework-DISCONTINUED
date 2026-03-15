@@ -119,6 +119,26 @@
     </div>
 
     <div class="panel">
+      <div class="panel-title">Subagent Summary</div>
+      <div class="metric-row">
+        <span class="metric-label">Tracked</span>
+        <span class="metric-value blue" id="subagents-total">0</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Active</span>
+        <span class="metric-value orange" id="subagents-active">0</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Requests</span>
+        <span class="metric-value cyan" id="subagents-requests">0</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Spend</span>
+        <span class="metric-value green" id="subagents-cost">$0.00</span>
+      </div>
+    </div>
+
+    <div class="panel">
       <div class="panel-title">Streaming Health</div>
       <div class="metric-row">
         <span class="metric-label">Stalls</span>
@@ -149,6 +169,31 @@
       </div>
     </div>
 
+    <div class="panel wide">
+      <div class="panel-title">Subagent Ledger</div>
+      <div class="log-scroll">
+        <table class="log-table">
+          <thead>
+            <tr>
+              <th>Agent</th>
+              <th>Status</th>
+              <th>Runs</th>
+              <th>Requests</th>
+              <th>Tools</th>
+              <th>Input</th>
+              <th>Output</th>
+              <th>Cache</th>
+              <th>Cost</th>
+              <th>Last Seen</th>
+            </tr>
+          </thead>
+          <tbody id="subagent-body">
+            <tr><td colspan="10" class="empty-state">No subagent data yet</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- Row 4: Request Log (full width) -->
     <div class="panel wide">
       <div class="panel-title">Request Log</div>
@@ -157,6 +202,7 @@
           <thead>
             <tr>
               <th>Time</th>
+              <th>Scope</th>
               <th>Model</th>
               <th>Input</th>
               <th>Output</th>
@@ -167,7 +213,7 @@
             </tr>
           </thead>
           <tbody id="log-body">
-            <tr><td colspan="8" class="empty-state">No requests yet</td></tr>
+            <tr><td colspan="9" class="empty-state">No requests yet</td></tr>
           </tbody>
         </table>
       </div>

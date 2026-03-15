@@ -4,9 +4,9 @@ const { MODEL_PRICING, CONTEXT_WINDOW_SIZE } = require('../constants');
 
 /**
  * Parse a single JSONL line from a Claude Code session file.
- * Returns a normalized event object or null if not relevant.
+ * Returns all normalized events found on the line.
  */
-function parseSessionLine(line) {
+function parseSessionEvents(line, options = {}) {
   if (!line || !line.trim()) return null;
 
   let obj;
@@ -15,6 +15,11 @@ function parseSessionLine(line) {
   } catch {
     return null;
   }
+
+  const events = [];
+  const filePath = options.filePath || null;
+  const isSubagent = isSubagentSession(obj, filePath);
+  const agentId = obj.agentId || extractAgentIdFromPath(filePath);
 
   // Assistant messages with usage data
   if (obj.type === 'assistant' && obj.message && obj.message.usage) {
@@ -32,12 +37,14 @@ function parseSessionLine(line) {
     const contextUsed = inputTokens + cacheRead + cacheWrite;
     const contextPercent = Math.min(100, (contextUsed / CONTEXT_WINDOW_SIZE) * 100);
 
-    return {
+    events.push({
       type: 'usage',
       timestamp: obj.timestamp || Date.now(),
       requestId,
       sessionId: obj.sessionId || obj.session_id || null,
       cwd: obj.cwd || null,
+      agentId,
+      isSubagent,
       model: normalizeModel(model),
       stopReason,
       inputTokens,
@@ -47,24 +54,61 @@ function parseSessionLine(line) {
       cost,
       contextUsed,
       contextPercent,
-    };
+    });
   }
 
   // Tool use results
   if (obj.type === 'tool_result' || (obj.type === 'assistant' && obj.message && obj.message.content)) {
     const toolUses = extractToolUses(obj);
     if (toolUses.length > 0) {
-      return {
+      events.push({
         type: 'tool_uses',
         timestamp: obj.timestamp || Date.now(),
         sessionId: obj.sessionId || obj.session_id || null,
         cwd: obj.cwd || null,
+        agentId,
+        isSubagent,
         tools: toolUses,
-      };
+      });
     }
   }
 
-  return null;
+  const agentLaunches = extractAgentLaunches(obj);
+  if (agentLaunches.length > 0) {
+    for (const launch of agentLaunches) {
+      events.push({
+        type: 'agent_spawn',
+        timestamp: obj.timestamp || Date.now(),
+        sessionId: obj.sessionId || obj.session_id || null,
+        cwd: obj.cwd || null,
+        agentName: launch.agentName,
+        description: launch.description,
+        prompt: launch.prompt,
+        requestedModel: launch.model,
+        toolUseId: launch.toolUseId,
+      });
+    }
+  }
+
+  const registration = extractAgentRegistration(obj);
+  if (registration) {
+    events.push({
+      type: 'agent_registration',
+      timestamp: obj.timestamp || Date.now(),
+      sessionId: obj.sessionId || obj.session_id || null,
+      cwd: obj.cwd || null,
+      agentId: registration.agentId,
+      toolUseId: registration.toolUseId,
+      prompt: registration.prompt,
+    });
+  }
+
+  return events.length > 0 ? events : null;
+}
+
+function parseSessionLine(line, options = {}) {
+  const events = parseSessionEvents(line, options);
+  return events && events.length > 0 ? events[0] : null;
 }
 
 function toNumber(...values) {
@@ -88,6 +132,47 @@ function extractToolUses(obj) {
     }
   }
   return tools;
+}
+
+function extractAgentLaunches(obj) {
+  const launches = [];
+  if (!obj.message || !Array.isArray(obj.message.content)) return launches;
+
+  for (const block of obj.message.content) {
+    if (block.type !== 'tool_use' || block.name !== 'Agent') continue;
+    launches.push({
+      toolUseId: block.id || null,
+      agentName: block.input && block.input.subagent_type ? block.input.subagent_type : 'unknown',
+      description: block.input && block.input.description ? block.input.description : '',
+      prompt: block.input && block.input.prompt ? block.input.prompt : '',
+      model: block.input && block.input.model ? block.input.model : null,
+    });
+  }
+
+  return launches;
+}
+
+function extractAgentRegistration(obj) {
+  if (obj.type !== 'progress' || !obj.data || obj.data.type !== 'agent_progress') {
+    return null;
+  }
+
+  return {
+    agentId: obj.data.agentId || obj.agentId || null,
+    toolUseId: obj.parentToolUseID || obj.parentToolUseId || null,
+    prompt: obj.data.prompt || '',
+  };
+}
+
+function isSubagentSession(obj, filePath) {
+  if (obj && obj.isSidechain) return true;
+  return typeof filePath === 'string' && filePath.includes('/subagents/');
+}
+
+function extractAgentIdFromPath(filePath) {
+  if (!filePath || typeof filePath !== 'string') return null;
+  const match = filePath.match(/\/subagents\/agent-([^.\/]+)\.jsonl$/);
+  return match ? match[1] : null;
 }
 
 function normalizeModel(model) {
@@ -120,13 +205,13 @@ function parseSessionLines(lines) {
   const events = [];
 
   for (const line of lines) {
-    const event = parseSessionLine(line);
-    if (!event) continue;
-
-    if (event.type === 'usage' && event.requestId) {
-      byRequestId.set(event.requestId, event);
-    } else {
-      events.push(event);
+    const lineEvents = parseSessionEvents(line) || [];
+    for (const event of lineEvents) {
+      if (event.type === 'usage' && event.requestId) {
+        byRequestId.set(event.requestId, event);
+      } else {
+        events.push(event);
+      }
     }
   }
 
@@ -134,4 +219,4 @@ function parseSessionLines(lines) {
   return [...byRequestId.values(), ...events].sort((a, b) => a.timestamp - b.timestamp);
 }
 
-module.exports = { parseSessionLine, parseSessionLines, normalizeModel, computeCost };
+module.exports = { parseSessionEvents, parseSessionLine, parseSessionLines, normalizeModel, computeCost };

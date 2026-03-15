@@ -23,6 +23,11 @@ implementation_artifacts: "{project-root}/docs/implementation-artifacts"
 test_artifacts: "{project-root}/docs/test-artifacts"
 creative_artifacts: "{project-root}/docs/creative-artifacts"
 
+# Documentation constraints
+markdown_max_lines_per_file: 1000
+markdown_overflow_action: "shard"
+markdown_shard_split_level: "H2"
+
 # Framework paths
 installed_path: "{project-root}/_kratos"
 config_path: "{project-root}/_kratos/_config"

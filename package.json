@@ -28,6 +28,7 @@
   },
   "files": [
     "bin/",
+    "dashboard/",
     "kratos-install.sh"
   ]
 }

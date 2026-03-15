@@ -14,6 +14,8 @@ This repository contains KRATOS, a fork of the original GAIA framework.
 
 - Claude Code supports slash commands with model frontmatter. GitHub Copilot does not.
 - When working from GitHub Copilot, operate directly on the relevant files and workflows instead of assuming slash-command routing will happen automatically.
+- Use the workspace prompt files in `.github/prompts/` for KRATOS entry points inside VS Code chat. These provide Copilot-native `/kratos*` prompt commands.
+- Use the custom agent in `.github/agents/kratos-orchestrator.agent.md` when you want KRATOS routing behavior in the Copilot agent picker.
 - If documenting usage, distinguish Claude Code command flows from GitHub Copilot file-based workflows.
 
 ## Installer and repo source

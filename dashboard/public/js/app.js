@@ -82,8 +82,10 @@
     renderLatency();
     renderModels();
     renderTools();
+    renderSubagentSummary();
     renderAgents();
     renderAgentActivity();
+    renderSubagentLedger();
     renderStreaming();
     renderErrors();
     renderRequestLog();
@@ -184,6 +186,14 @@
       .join('');
   }
 
+  function renderSubagentSummary() {
+    const summary = state.subagents || {};
+    setText('#subagents-total', summary.totalAgents || 0);
+    setText('#subagents-active', summary.activeAgents || 0);
+    setText('#subagents-requests', summary.totalRequests || 0);
+    setText('#subagents-cost', formatCost(summary.totalCost || 0));
+  }
+
   function renderStreaming() {
     setText('#streaming-stalls', state.streaming.stalls);
     setText('#streaming-total', formatDuration(state.streaming.totalStallMs));
@@ -200,18 +210,33 @@
     }
 
     container.innerHTML = entries
-      .sort((a, b) => b[1].calls - a[1].calls)
+      .sort((a, b) => (b[1].cost || 0) - (a[1].cost || 0) || (b[1].requestCount || 0) - (a[1].requestCount || 0))
       .slice(0, 10)
       .map(([name, data]) => {
         const avg = data.toolCalls > 0 && data.totalToolMs > 0
           ? formatDuration(data.totalToolMs / data.toolCalls)
           : '--';
-        return `<div class="tool-row">
-          <span class="tool-name">${name}</span>
-          <span class="tool-stat">${data.calls} calls</span>
-          <span class="tool-stat">${data.toolCalls} tools</span>
-          <span class="tool-stat">(avg ${avg})</span>
-        </div>`;
+        const tokenTotal = totalAgentTokens(data);
+        const status = data.status || 'idle';
+        return `<article class="agent-card">
+          <div class="agent-card-head">
+            <div class="agent-card-head-main">
+              <span class="agent-card-name">${escapeHtml(name)}</span>
+              <span class="scope-badge scope-badge-subagent">subagent</span>
+            </div>
+            <span class="agent-status agent-status-${status}">${escapeHtml(status)}</span>
+          </div>
+          <div class="agent-card-metrics">
+            <span>${data.calls || 0} runs</span>
+            <span>${data.requestCount || 0} req</span>
+            <span>${data.toolCalls || 0} tools</span>
+          </div>
+          <div class="agent-card-metrics">
+            <span>${formatTokens(tokenTotal)}</span>
+            <span>${formatCost(data.cost || 0)}</span>
+            <span>avg tool ${avg}</span>
+          </div>
+        </article>`;
       })
       .join('');
   }
@@ -271,6 +296,38 @@
     return 'implementation';
   }
 
+  function renderSubagentLedger() {
+    const tbody = $('#subagent-body');
+    if (!tbody) return;
+
+    const entries = Object.entries(state.agents || {});
+    if (entries.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="10" class="empty-state">No subagent data yet</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = entries
+      .sort((a, b) => (b[1].cost || 0) - (a[1].cost || 0) || totalAgentTokens(b[1]) - totalAgentTokens(a[1]))
+      .map(([name, data]) => `<tr>
+        <td>${escapeHtml(name)}</td>
+        <td><span class="agent-status agent-status-${escapeHtml(data.status || 'idle')}">${escapeHtml(data.status || 'idle')}</span></td>
+        <td>${data.calls || 0}</td>
+        <td>${data.requestCount || 0}</td>
+        <td>${data.toolCalls || 0}</td>
+        <td>${formatTokens(data.tokens && data.tokens.input || 0)}</td>
+        <td>${formatTokens(data.tokens && data.tokens.output || 0)}</td>
+        <td>${formatTokens((data.tokens && data.tokens.cacheRead || 0) + (data.tokens && data.tokens.cacheWrite || 0))}</td>
+        <td>${formatCost(data.cost || 0)}</td>
+        <td>${data.lastSeen ? formatTimestamp(data.lastSeen) : '--'}</td>
+      </tr>`)
+      .join('');
+  }
+
+  function totalAgentTokens(agent) {
+    if (!agent || !agent.tokens) return 0;
+    return (agent.tokens.input || 0) + (agent.tokens.output || 0) + (agent.tokens.cacheRead || 0) + (agent.tokens.cacheWrite || 0);
+  }
+
   function escapeHtml(value) {
     return String(value)
       .replace(/&/g, '&amp;')
@@ -302,6 +359,7 @@
       .slice(0, 50)
       .map((r) => `<tr>
         <td>${formatTimestamp(r.timestamp)}</td>
+        <td><span class="scope-badge ${r.isSubagent ? 'scope-badge-subagent' : 'scope-badge-root'}">${r.isSubagent ? 'subagent' : 'root'}</span></td>
         <td>${formatModel(r.model)}</td>
         <td>${formatTokens(r.inputTokens)}</td>
         <td>${formatTokens(r.outputTokens)}</td>

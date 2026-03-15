@@ -1,6 +1,6 @@
 # Kratos Framework v1.27.56
 
-This project uses the **KRATOS** (Generative Agile Intelligence Architecture) framework — an AI agent framework for Claude Code that orchestrates software product development through 15 specialized agents, 64 workflows, and 8 shared skills. KRATOS is the lightweight edition of [GAIA](https://github.com/jlouage/Gaia-framework) (25 agents) — optimized for fast, low-token-cost workflows. GitHub Copilot support is provided separately through `.github/copilot-instructions.md` because Copilot does not consume Claude slash-command frontmatter.
+This project uses the **KRATOS** (Generative Agile Intelligence Architecture) framework — an AI agent framework for Claude Code that orchestrates software product development through 15 operational agents, 64 workflows, and 8 shared skills. KRATOS is the lightweight edition of [GAIA](https://github.com/jlouage/Gaia-framework) (25 agents) — optimized for fast, low-token-cost workflows. GitHub Copilot support is provided separately through `.github/copilot-instructions.md` because Copilot does not consume Claude slash-command frontmatter.
 
 ## How to Start
 
@@ -18,8 +18,8 @@ The primary entry point is `/kratos` — this activates the orchestrator (Kratos
 When any `/kratos-*` command is invoked:
 1. Load `{project-root}/_kratos/core/engine/workflow.xml` — this is the execution engine
 2. The command file specifies a workflow.yaml or agent.md to process
-3. If a workflow: load the pre-resolved config from `_kratos/{module}/.resolved/` first; fall back to runtime resolution
-4. Follow the engine instructions EXACTLY — execute steps in order, save outputs at checkpoints
+3. If a workflow: prefer the pre-resolved config from `_kratos/{module}/.resolved/` when present; otherwise fall back to runtime resolution
+4. Follow the engine instructions EXACTLY — the engine is the source of truth for step order, checkpoints, execution modes, and gates
 5. Write a checkpoint to `_kratos/_memory/checkpoints/` after each significant step
 
 ## Framework Location
@@ -49,6 +49,7 @@ _kratos/                    # Framework root
 2. If not found: load `workflow.yaml` → module `config.yaml` (which inherits `global.yaml`)
 3. Resolve `{project-root}`, `{installed_path}`, system-generated values
 4. After any config change, run `/kratos-build-configs` to regenerate resolved configs
+5. Do not assume `.resolved/` exists in every checkout — fallback resolution must remain valid
 
 ### Context Budget
 - **40K token max** for framework content per activation
@@ -59,19 +60,20 @@ _kratos/                    # Framework root
 - Instruction step files: max 150 lines each
 - Skill files: max 300 lines (or load individual sections at ~50 lines each)
 
+### Markdown Size Limit
+- Any `.md` file must stay at or under **1000 lines**
+- If a markdown file would exceed 1000 lines, split it into multiple files before finalizing it
+- Once the limit is crossed, create at least 2 markdown files and keep every resulting markdown file at or under 1000 lines
+- Prefer structured sharding with an `index.md` and section-based files via `/kratos-shard-doc`
+
 ### Step Execution
-- Execute ALL steps in exact order — no skipping, no reordering
-- Read the ENTIRE step file before acting on it
-- Save output at every `<template-output>` checkpoint
-- In normal mode: WAIT for user confirmation at template-outputs
-- In YOLO mode: auto-proceed (user can toggle back to normal with "switch to normal mode")
-- In planning mode: present execution plan BEFORE processing steps; wait for user approval; user selects normal or yolo for runtime
+- Keep this file brief and defer detailed execution behavior to `_kratos/core/engine/workflow.xml`
+- Core invariants remain: execute steps in order, read full instruction files, save template outputs, and respect normal/YOLO/planning modes
 
 ### Checkpoint Discipline
 - Write a checkpoint to `_kratos/_memory/checkpoints/` after each step completes
-- Include: workflow name, step number, key variables, output file path
-- Include `files_touched` with sha256 checksums (`shasum -a 256`) for every file created/modified during the workflow
-- On resume: validate checksums — warn user of changed files, offer Proceed / Start fresh / Review
+- Include workflow name, step number, key variables, output file path, and `files_touched` checksums
+- On resume, validate checksums before continuing
 - If context is lost, `/kratos-resume` recovers from the last checkpoint
 
 ### Quality Gates
@@ -121,11 +123,11 @@ backlog → validating → ready-for-dev → in-progress → blocked → review 
 - `/kratos-security-review` — PASSED or FAILED
 - `/kratos-test-automate` — PASSED or FAILED
 - `/kratos-test-review` — PASSED or FAILED
-- `/kratos-review-perf` — PASSED or FAILED
+- `/kratos-performance-review` — PASSED or FAILED
 
 Run `/kratos-run-all-reviews` to execute all six reviews sequentially via subagents — one command instead of six.
 
-If any review fails, the story returns to `in-progress`. The Review Gate table in the story file tracks progress.
+If any review fails, the story remains in `review` until the failed reviews are fixed and re-run. The Review Gate table in the story file tracks progress.
 
 ## Memory Hygiene
 

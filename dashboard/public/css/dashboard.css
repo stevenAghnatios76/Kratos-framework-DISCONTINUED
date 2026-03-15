@@ -203,6 +203,109 @@ html, body {
   color: var(--text-secondary);
 }
 
+.agent-card {
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: #10161f;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.agent-card + .agent-card {
+  margin-top: 8px;
+}
+
+.agent-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.agent-card-head-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agent-card-name {
+  color: var(--accent-cyan);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.agent-card-metrics {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.agent-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 72px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.8px;
+}
+
+.agent-status-running {
+  color: var(--accent-orange);
+  border-color: rgba(210, 153, 34, 0.55);
+  background: rgba(210, 153, 34, 0.12);
+}
+
+.agent-status-queued {
+  color: var(--accent-blue);
+  border-color: rgba(88, 166, 255, 0.55);
+  background: rgba(88, 166, 255, 0.12);
+}
+
+.agent-status-completed {
+  color: var(--accent-green);
+  border-color: rgba(63, 185, 80, 0.55);
+  background: rgba(63, 185, 80, 0.12);
+}
+
+.agent-status-idle {
+  color: var(--text-secondary);
+  background: rgba(139, 148, 158, 0.08);
+}
+
+.scope-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 62px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.8px;
+  line-height: 1.2;
+}
+
+.scope-badge-root {
+  color: var(--accent-blue);
+  border-color: rgba(88, 166, 255, 0.55);
+  background: rgba(88, 166, 255, 0.12);
+}
+
+.scope-badge-subagent {
+  color: var(--accent-cyan);
+  border-color: rgba(57, 210, 192, 0.55);
+  background: rgba(57, 210, 192, 0.12);
+}
+
 .activity-board {
   display: grid;
   grid-template-columns: repeat(5, minmax(200px, 1fr));

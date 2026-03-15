@@ -53,7 +53,13 @@
     <action>Verify each fragment is under 200 lines</action>
   </step>
 
-  <step n="9" title="Report">
+  <step n="9" title="Markdown Size Compliance">
+    <action>Scan all framework markdown files (.md)</action>
+    <action>Verify every markdown file is at or under 1000 lines</action>
+    <action>If any markdown file exceeds 1000 lines, report it as a validation failure and recommend sharding via shard-doc</action>
+  </step>
+
+  <step n="10" title="Report">
     <action>Generate framework validation report</action>
     <action>Format: PASS/FAIL overall + itemized findings</action>
     <action>Group by: critical (broken references), warning (missing optional), info (suggestions)</action>

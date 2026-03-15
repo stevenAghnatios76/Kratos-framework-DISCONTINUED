@@ -155,6 +155,42 @@ copy_with_backup() {
   [[ "$OPT_VERBOSE" == true ]] && detail "Updated (backed up): $dst" || true
 }
 
+sync_dashboard_if_missing() {
+  local src_dir="$1" dst_dir="$2"
+  if [[ ! -d "$src_dir" ]]; then
+    return 0
+  fi
+  if [[ -e "$dst_dir" ]]; then
+    warn "Dashboard already exists at $dst_dir — leaving it unchanged during init."
+    return 0
+  fi
+  if [[ "$OPT_DRY_RUN" == true ]]; then
+    detail "[dry-run] Would install dashboard: $dst_dir"
+    return 0
+  fi
+  mkdir -p "$dst_dir"
+  rsync -a "$src_dir/" "$dst_dir/"
+}
+
+update_dashboard_with_backup() {
+  local src_dir="$1" dst_dir="$2" backup_dir="$3"
+  if [[ ! -d "$src_dir" ]]; then
+    return 0
+  fi
+  if [[ "$OPT_DRY_RUN" == true ]]; then
+    detail "[dry-run] Would update dashboard: $dst_dir"
+    return 0
+  fi
+
+  if [[ -d "$dst_dir" ]]; then
+    mkdir -p "$backup_dir"
+    rsync -a "$dst_dir/" "$backup_dir/dashboard/"
+  fi
+
+  mkdir -p "$dst_dir"
+  rsync -a --delete "$src_dir/" "$dst_dir/"
+}
+
 append_if_missing() {
   local file="$1" marker="$2" content="$3"
   if [[ -f "$file" ]] && grep -qF "$marker" "$file"; then
@@ -208,6 +244,21 @@ set_global_value() {
   else
     printf '%s: "%s"\n' "$key" "$value" >> "$file"
   fi
+}
+
+markdown_line_violations() {
+  local root="$1"
+  find "$root" \
+    -path '*/.git/*' -prune -o \
+    -path '*/node_modules/*' -prune -o \
+    -name '*.md' -type f -print0 2>/dev/null | \
+    while IFS= read -r -d '' file; do
+      local lines
+      lines="$(wc -l < "$file" | tr -d ' ')"
+      if [[ "$lines" -gt 1000 ]]; then
+        printf '%s|%s\n' "$file" "$lines"
+      fi
+    done
 }
 
 # ─── cmd_init ───────────────────────────────────────────────────────────────
@@ -365,7 +416,60 @@ cmd_init() {
     copy_if_missing "$source/CLAUDE.md" "$TARGET/CLAUDE.md"
   fi
 
-  # Step 7: Copy slash commands to .claude/commands/
+  # Step 7: Copy GitHub Copilot customizations to .github/
+  step "Installing GitHub Copilot customizations..."
+  if [[ -d "$source/.github" ]]; then
+    if [[ "$OPT_DRY_RUN" == true ]]; then
+      local prompt_count=0 agent_count=0
+      [[ -d "$source/.github/prompts" ]] && prompt_count="$(find "$source/.github/prompts" -name '*.prompt.md' -type f | wc -l | tr -d ' ')"
+      [[ -d "$source/.github/agents" ]] && agent_count="$(find "$source/.github/agents" -name '*.agent.md' -type f | wc -l | tr -d ' ')"
+      detail "[dry-run] Would install GitHub Copilot instructions and $prompt_count prompt(s), $agent_count agent(s)"
+    else
+      mkdir -p "$TARGET/.github"
+      if [[ -f "$source/.github/copilot-instructions.md" ]]; then
+        copy_if_missing "$source/.github/copilot-instructions.md" "$TARGET/.github/copilot-instructions.md"
+      fi
+      if [[ -d "$source/.github/prompts" ]]; then
+        mkdir -p "$TARGET/.github/prompts"
+        if [[ "$OPT_MINIMAL" == true ]]; then
+          local minimal_prompts=(
+            "kratos.prompt.md"
+            "kratos-help.prompt.md"
+            "kratos-quick-spec.prompt.md"
+            "kratos-quick-dev.prompt.md"
+            "kratos-dev-story.prompt.md"
+          )
+          for basename_prompt in "${minimal_prompts[@]}"; do
+            local prompt_file="$source/.github/prompts/$basename_prompt"
+            [[ -f "$prompt_file" ]] || continue
+            copy_if_missing "$prompt_file" "$TARGET/.github/prompts/$basename_prompt"
+          done
+        else
+          for prompt_file in "$source/.github/prompts"/*.prompt.md; do
+            [[ -f "$prompt_file" ]] || continue
+            local basename_prompt
+            basename_prompt="$(basename "$prompt_file")"
+            copy_if_missing "$prompt_file" "$TARGET/.github/prompts/$basename_prompt"
+          done
+        fi
+      fi
+      if [[ -d "$source/.github/agents" ]]; then
+        mkdir -p "$TARGET/.github/agents"
+        for agent_file in "$source/.github/agents"/*.agent.md; do
+          [[ -f "$agent_file" ]] || continue
+          local basename_agent
+          basename_agent="$(basename "$agent_file")"
+          copy_if_missing "$agent_file" "$TARGET/.github/agents/$basename_agent"
+        done
+      fi
+    fi
+  fi
+
+  # Step 8: Install dashboard
+  step "Installing KRATOS dashboard..."
+  sync_dashboard_if_missing "$source/dashboard" "$TARGET/dashboard"
+
+  # Step 9: Copy slash commands to .claude/commands/
   step "Installing slash commands..."
   if [[ -d "$source/.claude/commands" ]]; then
     if [[ "$OPT_DRY_RUN" == true ]]; then
@@ -407,7 +511,7 @@ cmd_init() {
     fi
   fi
 
-  # Step 8: Append KRATOS entries to .gitignore
+  # Step 10: Append KRATOS entries to .gitignore
   step "Updating .gitignore..."
   local gitignore_block
   gitignore_block="$(cat <<'GITIGNORE'
@@ -435,10 +539,11 @@ GITIGNORE
   detail "1. cd $TARGET"
   detail "2. Run /kratos-build-configs in the Claude Code terminal to generate resolved configs"
   if [[ "$OPT_MINIMAL" == true ]]; then
-    detail "3. Run /kratos-quick-spec or /kratos-agent-senior-fullstack to start with the lightweight profile"
+    detail "3. In GitHub Copilot chat, run /kratos-quick-spec or /kratos-dev-story; in Claude Code, use the matching /kratos-* command"
     detail "4. Minimal profile installed: add more commands or workflows later by running a full update from your fork"
   else
-    detail "3. Run /kratos in the Claude Code terminal to start the orchestrator"
+    detail "3. Start in GitHub Copilot chat with /kratos, or in Claude Code with the matching /kratos command set"
+    detail "4. Launch the dashboard with: cd dashboard && npm install && npm start"
   fi
   echo ""
 }
@@ -541,6 +646,36 @@ cmd_update() {
   done
 
   detail "Processed $updated file(s) across ${#update_targets[@]} targets"
+
+  # Update GitHub Copilot customizations
+  step "Updating GitHub Copilot customizations..."
+  if [[ -d "$source/.github" ]]; then
+    mkdir -p "$TARGET/.github"
+    if [[ -f "$source/.github/copilot-instructions.md" ]]; then
+      copy_with_backup "$source/.github/copilot-instructions.md" "$TARGET/.github/copilot-instructions.md" "$backup_dir"
+    fi
+    if [[ -d "$source/.github/prompts" ]]; then
+      mkdir -p "$TARGET/.github/prompts"
+      for prompt_file in "$source/.github/prompts"/*.prompt.md; do
+        [[ -f "$prompt_file" ]] || continue
+        local basename_prompt
+        basename_prompt="$(basename "$prompt_file")"
+        copy_with_backup "$prompt_file" "$TARGET/.github/prompts/$basename_prompt" "$backup_dir"
+      done
+    fi
+    if [[ -d "$source/.github/agents" ]]; then
+      mkdir -p "$TARGET/.github/agents"
+      for agent_file in "$source/.github/agents"/*.agent.md; do
+        [[ -f "$agent_file" ]] || continue
+        local basename_agent
+        basename_agent="$(basename "$agent_file")"
+        copy_with_backup "$agent_file" "$TARGET/.github/agents/$basename_agent" "$backup_dir"
+      done
+    fi
+  fi
+
+  step "Updating KRATOS dashboard..."
+  update_dashboard_with_backup "$source/dashboard" "$TARGET/dashboard" "$backup_dir"
 
   # Update slash commands (add new ones, update existing with backup)
   step "Updating slash commands..."
@@ -662,6 +797,28 @@ cmd_validate() {
   # CLAUDE.md
   check "CLAUDE.md exists" "[[ -f '$TARGET/CLAUDE.md' ]]"
 
+  # GitHub Copilot assets
+  check "GitHub Copilot instructions" "[[ -f '$TARGET/.github/copilot-instructions.md' ]]"
+  check "GitHub Copilot prompts directory" "[[ -d '$TARGET/.github/prompts' ]]"
+  if [[ -d "$TARGET/.github/prompts" ]]; then
+    local prompt_count
+    prompt_count="$(find "$TARGET/.github/prompts" -name '*.prompt.md' -type f 2>/dev/null | wc -l | tr -d ' ')"
+    check "GitHub Copilot prompts present (found: $prompt_count)" "[[ $prompt_count -gt 0 ]]"
+  fi
+
+  local md_violations
+  md_violations="$(markdown_line_violations "$TARGET")"
+  check "Markdown files stay within 1000 lines" "[[ -z \"$md_violations\" ]]"
+  if [[ -n "$md_violations" ]]; then
+    while IFS='|' read -r file lines; do
+      [[ -n "$file" ]] || continue
+      printf "  ${RED}✖${RESET}  Markdown overflow: %s (%s lines)\n" "$file" "$lines"
+    done <<< "$md_violations"
+  fi
+
+  check "KRATOS dashboard directory" "[[ -d '$TARGET/dashboard' ]]"
+  check "KRATOS dashboard package" "[[ -f '$TARGET/dashboard/package.json' ]]"
+
   # Slash commands
   check "Slash commands directory" "[[ -d '$TARGET/.claude/commands' ]]"
   if [[ -d "$TARGET/.claude/commands" ]]; then
@@ -715,6 +872,14 @@ cmd_status() {
   printf "  ${BOLD}User:${RESET}         %s\n" "${user_name:-unknown}"
   printf "  ${BOLD}Profile:${RESET}      %s\n" "$install_profile"
 
+  local copilot_instructions="no"
+  [[ -f "$TARGET/.github/copilot-instructions.md" ]] && copilot_instructions="yes"
+  printf "  ${BOLD}Copilot:${RESET}      %s\n" "$copilot_instructions"
+
+  local dashboard_installed="no"
+  [[ -f "$TARGET/dashboard/package.json" ]] && dashboard_installed="yes"
+  printf "  ${BOLD}Dashboard:${RESET}    %s\n" "$dashboard_installed"
+
   # Modules
   local expected_modules=(core lifecycle dev)
   if [[ "$install_profile" != "minimal" ]]; then
@@ -732,6 +897,16 @@ cmd_status() {
     cmd_count="$(find "$TARGET/.claude/commands" -name 'kratos*.md' -type f 2>/dev/null | wc -l | tr -d ' ')"
   fi
   printf "  ${BOLD}Commands:${RESET}     %s slash commands\n" "$cmd_count"
+
+  local prompt_count=0 agent_count=0
+  if [[ -d "$TARGET/.github/prompts" ]]; then
+    prompt_count="$(find "$TARGET/.github/prompts" -name '*.prompt.md' -type f 2>/dev/null | wc -l | tr -d ' ')"
+  fi
+  if [[ -d "$TARGET/.github/agents" ]]; then
+    agent_count="$(find "$TARGET/.github/agents" -name '*.agent.md' -type f 2>/dev/null | wc -l | tr -d ' ')"
+  fi
+  printf "  ${BOLD}Prompts:${RESET}      %s Copilot prompt files\n" "$prompt_count"
+  printf "  ${BOLD}Agents:${RESET}       %s Copilot custom agents\n" "$agent_count"
 
   # Sidecar status
   local sidecar_count=0

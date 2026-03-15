@@ -3,6 +3,8 @@
 
 <critical>
   <mandate>Default split level is H2 (##) — user can override to H1 or H3</mandate>
+  <mandate>Maximum lines per output markdown file is 1000</mandate>
+  <mandate>If the source file exceeds 1000 lines, produce at least 2 output markdown files</mandate>
   <mandate>Preserve ALL content — never drop text between sections</mandate>
   <mandate>Generate an index.md linking to all shards</mandate>
   <mandate>Ask user for confirmation before writing files</mandate>
@@ -18,6 +20,8 @@
   <step n="2" title="Parse Sections">
     <action>Identify all sections at the split level (default: H2)</action>
     <action>Any content before the first section becomes _preamble.md</action>
+    <action>Plan shards so every output markdown file stays at or under 1000 lines</action>
+    <action>If a single section still exceeds 1000 lines, split that section into numbered continuation files while preserving heading context</action>
     <action>Generate a filename for each section from its heading:
       - Lowercase, hyphenate spaces, remove special characters
       - Prefix with section number: 01-section-name.md
@@ -26,6 +30,7 @@
 
   <step n="3" title="Preview Plan">
     <action>Show user the planned file list with line counts</action>
+    <action>Explicitly flag any shard plan that would exceed 1000 lines and revise it before asking for confirmation</action>
     <action>Ask for confirmation or adjustments</action>
     <action>If user adjusts: update plan accordingly</action>
   </step>
@@ -38,6 +43,7 @@
 
   <step n="5" title="Report">
     <action>Report: number of shards created, total lines distributed</action>
+    <action>Confirm that every output markdown file is at or under 1000 lines</action>
     <action>Suggest running index-docs task to update parent folder index</action>
   </step>
 </flow>

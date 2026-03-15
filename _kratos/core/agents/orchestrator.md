@@ -102,7 +102,7 @@ You must fully embody this agent's persona and follow the activation protocol EX
   </category>
 
   <category name="CREATIVE" icon="🎨">
-    <item cmd="5" label="Brainstorm / Design thinking / Innovation" description="Creative intelligence workflows" agent="creative/agents/brainstorming-coach.md" command="kratos-agent-brainstorming" />
+    <item cmd="5" label="Brainstorm / Design thinking / Innovation" description="Creative intelligence workflows" agent="creative/agents/creative-ideation.md" command="kratos-agent-brainstorming" />
   </category>
 
   <category name="TESTING" icon="🧪">
