@@ -1,0 +1,25 @@
+{
+  // ──────────────────────────────────────────────────────────────────────────
+  // Kratos Framework — DEVELOPER workspace settings
+  //
+  // .github/agents/, .github/prompts/, and .claude/commands/ are PRODUCT
+  // template files installed into USER projects via npx. They must NOT be
+  // treated as active agents/prompts/commands for this dev workspace.
+  //
+  // These exclusions prevent GitHub Copilot from loading the agent hooks
+  // and prompt files during framework development, stopping the
+  // UserPromptSubmit warnings while keeping all files committed.
+  // ──────────────────────────────────────────────────────────────────────────
+  "files.exclude": {
+    ".github/agents": true,
+    ".github/prompts": true,
+    ".claude/commands": true
+  },
+
+  // Also exclude from search so they don't pollute grep/find results
+  "search.exclude": {
+    ".github/agents": true,
+    ".github/prompts": true,
+    ".claude/commands": true
+  }
+}

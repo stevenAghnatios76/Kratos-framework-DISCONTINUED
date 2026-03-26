@@ -1,0 +1,10 @@
+# Copilot ignore — Kratos Framework development workspace
+#
+# The files below are PRODUCT TEMPLATES installed into user projects via npx.
+# They are NOT instructions for GitHub Copilot working in this repo.
+# Excluding them prevents Copilot from treating them as active workspace
+# agents/prompts and stops UserPromptSubmit hook warnings during development.
+
+.github/agents/
+.github/prompts/
+.claude/commands/
