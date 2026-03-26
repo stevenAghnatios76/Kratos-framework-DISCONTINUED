@@ -1,0 +1,71 @@
+# Kratos Lifecycle Hooks Configuration
+# Hooks execute shell commands at specific lifecycle points.
+# Each hook can halt the workflow on failure or just warn.
+#
+# Hook points:
+#   pre-workflow    — Before any workflow starts
+#   post-step       — After each workflow step completes
+#   pre-gate        — Before a quality gate check
+#   post-gate       — After a quality gate passes or fails
+#   pre-commit      — Before a git commit
+#   post-review     — After a review gate completes
+#   on-error        — When any workflow step fails
+#   on-resume       — When checkpoint recovery triggers
+#   post-learning   — After a trajectory is scored
+#
+# Hook properties:
+#   command   — Shell command to execute
+#   on_fail   — What to do if command exits non-zero: halt | warn | skip
+#   timeout   — Max execution time in seconds (default: 30)
+#   condition — Optional: only run if condition is met
+#   env       — Optional: extra environment variables
+
+hooks:
+  pre-workflow: []
+    # Example:
+    # - command: "npm test --bail"
+    #   on_fail: "halt"
+    #   timeout: 120
+    #   condition: "workflow.has_tests"
+
+  post-step: []
+    # Example:
+    # - command: "npx eslint --fix {files_modified}"
+    #   on_fail: "warn"
+    #   timeout: 60
+
+  pre-gate: []
+    # Example:
+    # - command: "npx tsc --noEmit"
+    #   on_fail: "halt"
+    #   timeout: 60
+
+  post-gate: []
+    # Example:
+    # - command: "node scripts/notify-slack.js --gate={gate_name} --result={gate_result}"
+    #   on_fail: "skip"
+
+  pre-commit: []
+    # Example:
+    # - command: "npx lint-staged"
+    #   on_fail: "halt"
+
+  post-review: []
+    # Example:
+    # - command: "node scripts/update-dashboard.js --review={review_type} --result={review_result}"
+    #   on_fail: "skip"
+
+  on-error: []
+    # Example:
+    # - command: "node scripts/alert-team.js --workflow={workflow_name} --error={error_message}"
+    #   on_fail: "skip"
+
+  on-resume: []
+    # Example:
+    # - command: "node scripts/validate-env.js"
+    #   on_fail: "warn"
+
+  post-learning: []
+    # Example:
+    # - command: "node scripts/learning-report.js --agent={agent_id} --score={score}"
+    #   on_fail: "skip"

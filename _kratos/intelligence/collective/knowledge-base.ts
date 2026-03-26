@@ -93,9 +93,9 @@ export class CollectiveKnowledge {
     const result = database.exec(sql, values);
     if (!result.length) return [];
 
-    return result[0].values.map(row => {
+    return result[0].values.map((row: unknown[]) => {
       const obj: Record<string, unknown> = {};
-      result[0].columns.forEach((col, i) => { obj[col] = row[i]; });
+      result[0].columns.forEach((col: string, i: number) => { obj[col] = row[i]; });
       return {
         id: obj.id as number,
         partition: obj.partition as MemoryEntry['partition'],

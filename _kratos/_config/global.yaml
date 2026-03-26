@@ -64,3 +64,59 @@ intelligence:
       auto_resolve: true
       authority_matrix_enabled: true
       escalate_to_human: true
+
+# Providers system (Phase 3)
+providers:
+  config_path: "{config_path}/providers.yaml"
+  default_provider: "anthropic"
+  daily_budget_usd: 10.00
+  cost_routing: true
+  failover_enabled: true
+
+# Validator system (Phase 3)
+validator:
+  enabled: true
+  auto_refresh_ground_truth: true
+  ground_truth_ttl_hours: 1
+  fail_on_critical: true
+  sidecar_path: "{memory_path}/validator-sidecar"
+
+# Execution system (Phase 2)
+execution:
+  parallel:
+    enabled: true
+    max_concurrent: 6
+    mode: "auto"
+    conflict_detection: true
+    heartbeat_interval_sec: 60
+    stall_timeout_sec: 300
+  hooks:
+    config_path: "{config_path}/hooks.yaml"
+    enabled: true
+    log_results: true
+    max_hook_timeout_sec: 120
+
+# Observability system (Phase 4)
+observability:
+  metrics:
+    enabled: true
+    retention_days: 90
+    auto_record: true
+    export_format: "json"
+  codebase:
+    enabled: true
+    scan_on_commit: false
+    drift_check_on_deploy: true
+    debt_threshold_score: 50
+    ignored_paths: ["node_modules", "dist", ".cache", ".git"]
+  plugins:
+    enabled: true
+    config_path: "{config_path}/plugins.yaml"
+    plugins_dir: "{installed_path}/plugins"
+    auto_discover: true
+  context:
+    enabled: true
+    budget_max_tokens: 40000
+    cache_dir: "{installed_path}/.cache"
+    auto_build: false
+    invalidate_on_config_change: true

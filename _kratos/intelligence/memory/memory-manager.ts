@@ -179,7 +179,7 @@ export class MemoryManager {
 
     const result = db.exec(sql, values);
     if (!result.length) return [];
-    return result[0].values.map(row => this.rowToEntry(result[0].columns, row));
+    return result[0].values.map((row: unknown[]) => this.rowToEntry(result[0].columns, row));
   }
 
   // Search
@@ -203,7 +203,7 @@ export class MemoryManager {
     const sql = `SELECT * FROM memory_entries WHERE ${conditions.join(' AND ')} AND status = 'active' ORDER BY score DESC, updated_at DESC LIMIT ?`;
     const result = db.exec(sql, values);
     if (!result.length) return [];
-    return result[0].values.map(row => this.rowToEntry(result[0].columns, row));
+    return result[0].values.map((row: unknown[]) => this.rowToEntry(result[0].columns, row));
   }
 
   // Agent-scoped helpers
@@ -213,7 +213,7 @@ export class MemoryManager {
     const sql = `SELECT * FROM memory_entries WHERE (agent_id = ? OR access_level IN ('team-shared', 'global')) AND status = 'active' ORDER BY score DESC, updated_at DESC`;
     const result = db.exec(sql, [agent_id]);
     if (!result.length) return [];
-    return result[0].values.map(row => this.rowToEntry(result[0].columns, row));
+    return result[0].values.map((row: unknown[]) => this.rowToEntry(result[0].columns, row));
   }
 
   async storeDecision(agent_id: string, title: string, content: string, opts?: Partial<MemoryEntry>): Promise<number> {
@@ -360,7 +360,7 @@ export class MemoryManager {
     const result = db.exec('SELECT DISTINCT agent_id FROM memory_entries');
     if (!result.length) return;
 
-    const agents = result[0].values.map(row => row[0] as string);
+    const agents = result[0].values.map((row: unknown[]) => row[0] as string);
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
     }
@@ -413,6 +413,16 @@ export class MemoryManager {
     const expired_count = (expiredResult[0]?.values[0]?.[0] as number) || 0;
 
     return { total_entries, by_partition, by_agent, stale_count, expired_count };
+  }
+
+  // Persistence
+
+  /**
+   * Flush pending changes to disk. Used by BudgetTracker and other modules
+   * that write directly to the database via getDatabase().
+   */
+  flush(): void {
+    this.save();
   }
 
   // Database access for other modules

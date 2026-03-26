@@ -39,7 +39,7 @@ export class SubscriptionManager {
       [agentId]
     );
     if (!result.length) return [];
-    return result[0].values.map(row => this.rowToSubscription(result[0].columns, row));
+    return result[0].values.map((row: unknown[]) => this.rowToSubscription(result[0].columns, row));
   }
 
   async setupDefaults(): Promise<void> {

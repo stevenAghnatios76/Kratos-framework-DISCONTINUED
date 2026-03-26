@@ -15,4 +15,4 @@ name,displayName,title,icon,module,path
 "test-architect","Sable","Master Test Architect","🧪","testing","_kratos/testing/agents/test-architect.md"
 "security","Zara","Application Security Expert","🔒","lifecycle","_kratos/lifecycle/agents/security.md"
 "devops","Soren","DevOps/SRE Engineer","🚀","lifecycle","_kratos/lifecycle/agents/devops.md"
-
+"validator","Val","Artifact Validator","🔍","lifecycle","_kratos/lifecycle/agents/validator.md"

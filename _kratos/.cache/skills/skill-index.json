@@ -1,0 +1,400 @@
+{
+  "skills": [
+    {
+      "skill_name": "api-design",
+      "file_path": "/Users/stevenagh76/Documents/Kratos-framework/_kratos/dev/skills/api-design.md",
+      "total_lines": 230,
+      "sections": [
+        {
+          "heading": "REST Conventions",
+          "start_line": 14,
+          "end_line": 64,
+          "line_count": 50,
+          "content_hash": "0ee6a91c"
+        },
+        {
+          "heading": "GraphQL Design",
+          "start_line": 64,
+          "end_line": 105,
+          "line_count": 41,
+          "content_hash": "41cfceb6"
+        },
+        {
+          "heading": "OpenAPI Specification",
+          "start_line": 105,
+          "end_line": 157,
+          "line_count": 52,
+          "content_hash": "5c25f9f7"
+        },
+        {
+          "heading": "API Versioning",
+          "start_line": 157,
+          "end_line": 195,
+          "line_count": 38,
+          "content_hash": "52546909"
+        },
+        {
+          "heading": "Error Standards (RFC 7807)",
+          "start_line": 195,
+          "end_line": 230,
+          "line_count": 35,
+          "content_hash": "0dbea0a9"
+        }
+      ],
+      "indexed_at": "2026-03-26T14:44:51.027Z"
+    },
+    {
+      "skill_name": "code-review-standards",
+      "file_path": "/Users/stevenagh76/Documents/Kratos-framework/_kratos/dev/skills/code-review-standards.md",
+      "total_lines": 227,
+      "sections": [
+        {
+          "heading": "Review Checklist",
+          "start_line": 14,
+          "end_line": 60,
+          "line_count": 46,
+          "content_hash": "23a5feba"
+        },
+        {
+          "heading": "SOLID Principles",
+          "start_line": 60,
+          "end_line": 133,
+          "line_count": 73,
+          "content_hash": "098862b1"
+        },
+        {
+          "heading": "Complexity Metrics",
+          "start_line": 133,
+          "end_line": 227,
+          "line_count": 94,
+          "content_hash": "1e56ae50"
+        }
+      ],
+      "indexed_at": "2026-03-26T14:44:51.029Z"
+    },
+    {
+      "skill_name": "database-design",
+      "file_path": "/Users/stevenagh76/Documents/Kratos-framework/_kratos/dev/skills/database-design.md",
+      "total_lines": 173,
+      "sections": [
+        {
+          "heading": "Schema Design",
+          "start_line": 14,
+          "end_line": 52,
+          "line_count": 38,
+          "content_hash": "6b920a80"
+        },
+        {
+          "heading": "Migrations",
+          "start_line": 52,
+          "end_line": 100,
+          "line_count": 48,
+          "content_hash": "3d31b7e7"
+        },
+        {
+          "heading": "Indexing",
+          "start_line": 100,
+          "end_line": 132,
+          "line_count": 32,
+          "content_hash": "19b8c1c4"
+        },
+        {
+          "heading": "ORM Patterns",
+          "start_line": 132,
+          "end_line": 173,
+          "line_count": 41,
+          "content_hash": "1c898493"
+        }
+      ],
+      "indexed_at": "2026-03-26T14:44:51.029Z"
+    },
+    {
+      "skill_name": "docker-workflow",
+      "file_path": "/Users/stevenagh76/Documents/Kratos-framework/_kratos/dev/skills/docker-workflow.md",
+      "total_lines": 223,
+      "sections": [
+        {
+          "heading": "Multi-Stage Builds",
+          "start_line": 14,
+          "end_line": 94,
+          "line_count": 80,
+          "content_hash": "1023c51b"
+        },
+        {
+          "heading": "Docker Compose for Development",
+          "start_line": 94,
+          "end_line": 158,
+          "line_count": 64,
+          "content_hash": "5aa3f945"
+        },
+        {
+          "heading": "Security Scanning",
+          "start_line": 158,
+          "end_line": 223,
+          "line_count": 65,
+          "content_hash": "7c7750e1"
+        }
+      ],
+      "indexed_at": "2026-03-26T14:44:51.029Z"
+    },
+    {
+      "skill_name": "documentation-standards",
+      "file_path": "/Users/stevenagh76/Documents/Kratos-framework/_kratos/dev/skills/documentation-standards.md",
+      "total_lines": 263,
+      "sections": [
+        {
+          "heading": "README Template",
+          "start_line": 14,
+          "end_line": 24,
+          "line_count": 10,
+          "content_hash": "5606046f"
+        },
+        {
+          "heading": "Overview",
+          "start_line": 24,
+          "end_line": 29,
+          "line_count": 5,
+          "content_hash": "2bf0fec1"
+        },
+        {
+          "heading": "Getting Started",
+          "start_line": 29,
+          "end_line": 50,
+          "line_count": 21,
+          "content_hash": "01e56ee0"
+        },
+        {
+          "heading": "Usage",
+          "start_line": 50,
+          "end_line": 54,
+          "line_count": 4,
+          "content_hash": "0e6ad150"
+        },
+        {
+          "heading": "Architecture",
+          "start_line": 54,
+          "end_line": 59,
+          "line_count": 5,
+          "content_hash": "06a2f424"
+        },
+        {
+          "heading": "Testing",
+          "start_line": 59,
+          "end_line": 66,
+          "line_count": 7,
+          "content_hash": "44a30b93"
+        },
+        {
+          "heading": "Contributing",
+          "start_line": 66,
+          "end_line": 70,
+          "line_count": 4,
+          "content_hash": "46040e69"
+        },
+        {
+          "heading": "License",
+          "start_line": 70,
+          "end_line": 88,
+          "line_count": 18,
+          "content_hash": "3e91e955"
+        },
+        {
+          "heading": "Architecture Decision Records",
+          "start_line": 88,
+          "end_line": 101,
+          "line_count": 13,
+          "content_hash": "3c622b71"
+        },
+        {
+          "heading": "Context",
+          "start_line": 101,
+          "end_line": 106,
+          "line_count": 5,
+          "content_hash": "6c864caf"
+        },
+        {
+          "heading": "Decision",
+          "start_line": 106,
+          "end_line": 111,
+          "line_count": 5,
+          "content_hash": "06f0facc"
+        },
+        {
+          "heading": "Consequences",
+          "start_line": 111,
+          "end_line": 124,
+          "line_count": 13,
+          "content_hash": "43fe46df"
+        },
+        {
+          "heading": "Alternatives Considered",
+          "start_line": 124,
+          "end_line": 151,
+          "line_count": 27,
+          "content_hash": "2cd85d6b"
+        },
+        {
+          "heading": "Inline Code Comments",
+          "start_line": 151,
+          "end_line": 203,
+          "line_count": 52,
+          "content_hash": "2e3ed116"
+        },
+        {
+          "heading": "API Documentation",
+          "start_line": 203,
+          "end_line": 222,
+          "line_count": 19,
+          "content_hash": "4297f201"
+        },
+        {
+          "heading": "Create User",
+          "start_line": 222,
+          "end_line": 263,
+          "line_count": 41,
+          "content_hash": "3071504a"
+        }
+      ],
+      "indexed_at": "2026-03-26T14:44:51.029Z"
+    },
+    {
+      "skill_name": "git-workflow",
+      "file_path": "/Users/stevenagh76/Documents/Kratos-framework/_kratos/dev/skills/git-workflow.md",
+      "total_lines": 158,
+      "sections": [
+        {
+          "heading": "Branching Strategy",
+          "start_line": 14,
+          "end_line": 47,
+          "line_count": 33,
+          "content_hash": "315894d2"
+        },
+        {
+          "heading": "Conventional Commits",
+          "start_line": 47,
+          "end_line": 91,
+          "line_count": 44,
+          "content_hash": "625be6d0"
+        },
+        {
+          "heading": "Pull Requests",
+          "start_line": 91,
+          "end_line": 95,
+          "line_count": 4,
+          "content_hash": "700531bf"
+        },
+        {
+          "heading": "Summary",
+          "start_line": 95,
+          "end_line": 98,
+          "line_count": 3,
+          "content_hash": "66d0d1d3"
+        },
+        {
+          "heading": "Changes",
+          "start_line": 98,
+          "end_line": 101,
+          "line_count": 3,
+          "content_hash": "068ccaeb"
+        },
+        {
+          "heading": "Testing",
+          "start_line": 101,
+          "end_line": 106,
+          "line_count": 5,
+          "content_hash": "5d69d741"
+        },
+        {
+          "heading": "Checklist",
+          "start_line": 106,
+          "end_line": 127,
+          "line_count": 21,
+          "content_hash": "195161d6"
+        },
+        {
+          "heading": "Conflict Resolution",
+          "start_line": 127,
+          "end_line": 158,
+          "line_count": 31,
+          "content_hash": "58888865"
+        }
+      ],
+      "indexed_at": "2026-03-26T14:44:51.029Z"
+    },
+    {
+      "skill_name": "security-basics",
+      "file_path": "/Users/stevenagh76/Documents/Kratos-framework/_kratos/dev/skills/security-basics.md",
+      "total_lines": 231,
+      "sections": [
+        {
+          "heading": "OWASP Top 10 Prevention",
+          "start_line": 14,
+          "end_line": 69,
+          "line_count": 55,
+          "content_hash": "58a40efc"
+        },
+        {
+          "heading": "Input Validation",
+          "start_line": 69,
+          "end_line": 119,
+          "line_count": 50,
+          "content_hash": "6caa518f"
+        },
+        {
+          "heading": "Secrets Management",
+          "start_line": 119,
+          "end_line": 167,
+          "line_count": 48,
+          "content_hash": "6db99388"
+        },
+        {
+          "heading": "CORS and CSRF",
+          "start_line": 167,
+          "end_line": 231,
+          "line_count": 64,
+          "content_hash": "3ed50ac7"
+        }
+      ],
+      "indexed_at": "2026-03-26T14:44:51.029Z"
+    },
+    {
+      "skill_name": "testing-patterns",
+      "file_path": "/Users/stevenagh76/Documents/Kratos-framework/_kratos/dev/skills/testing-patterns.md",
+      "total_lines": 233,
+      "sections": [
+        {
+          "heading": "TDD Cycle",
+          "start_line": 14,
+          "end_line": 52,
+          "line_count": 38,
+          "content_hash": "17180653"
+        },
+        {
+          "heading": "Unit Testing",
+          "start_line": 52,
+          "end_line": 103,
+          "line_count": 51,
+          "content_hash": "7b81a472"
+        },
+        {
+          "heading": "Integration Testing",
+          "start_line": 103,
+          "end_line": 171,
+          "line_count": 68,
+          "content_hash": "3aacf41a"
+        },
+        {
+          "heading": "Test Doubles",
+          "start_line": 171,
+          "end_line": 233,
+          "line_count": 62,
+          "content_hash": "6267c694"
+        }
+      ],
+      "indexed_at": "2026-03-26T14:44:51.029Z"
+    }
+  ],
+  "total_skills": 8,
+  "total_sections": 47,
+  "indexed_at": "2026-03-26T14:44:51.029Z"
+}

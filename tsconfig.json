@@ -10,7 +10,8 @@
     "declaration": true,
     "sourceMap": true,
     "resolveJsonModule": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["node"]
   },
   "include": ["_kratos/**/*.ts"],
   "exclude": ["node_modules", "dist"]

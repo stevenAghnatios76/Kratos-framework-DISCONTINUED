@@ -1,0 +1,130 @@
+[
+  {
+    "agent_id": "_base-dev",
+    "persona_lines": 168,
+    "skill_sections": [],
+    "total_lines": 168,
+    "estimated_tokens": 1680,
+    "built_at": "2026-03-26T14:44:51.030Z"
+  },
+  {
+    "agent_id": "senior-backend",
+    "persona_lines": 66,
+    "skill_sections": [],
+    "total_lines": 66,
+    "estimated_tokens": 660,
+    "built_at": "2026-03-26T14:44:51.030Z"
+  },
+  {
+    "agent_id": "senior-frontend",
+    "persona_lines": 66,
+    "skill_sections": [],
+    "total_lines": 66,
+    "estimated_tokens": 660,
+    "built_at": "2026-03-26T14:44:51.030Z"
+  },
+  {
+    "agent_id": "senior-fullstack",
+    "persona_lines": 66,
+    "skill_sections": [],
+    "total_lines": 66,
+    "estimated_tokens": 660,
+    "built_at": "2026-03-26T14:44:51.030Z"
+  },
+  {
+    "agent_id": "analyst",
+    "persona_lines": 105,
+    "skill_sections": [],
+    "total_lines": 105,
+    "estimated_tokens": 1050,
+    "built_at": "2026-03-26T14:44:51.031Z"
+  },
+  {
+    "agent_id": "architect",
+    "persona_lines": 104,
+    "skill_sections": [],
+    "total_lines": 104,
+    "estimated_tokens": 1040,
+    "built_at": "2026-03-26T14:44:51.031Z"
+  },
+  {
+    "agent_id": "devops",
+    "persona_lines": 108,
+    "skill_sections": [],
+    "total_lines": 108,
+    "estimated_tokens": 1080,
+    "built_at": "2026-03-26T14:44:51.031Z"
+  },
+  {
+    "agent_id": "pm",
+    "persona_lines": 106,
+    "skill_sections": [],
+    "total_lines": 106,
+    "estimated_tokens": 1060,
+    "built_at": "2026-03-26T14:44:51.031Z"
+  },
+  {
+    "agent_id": "qa",
+    "persona_lines": 90,
+    "skill_sections": [],
+    "total_lines": 90,
+    "estimated_tokens": 900,
+    "built_at": "2026-03-26T14:44:51.032Z"
+  },
+  {
+    "agent_id": "security",
+    "persona_lines": 105,
+    "skill_sections": [],
+    "total_lines": 105,
+    "estimated_tokens": 1050,
+    "built_at": "2026-03-26T14:44:51.032Z"
+  },
+  {
+    "agent_id": "sm",
+    "persona_lines": 114,
+    "skill_sections": [],
+    "total_lines": 114,
+    "estimated_tokens": 1140,
+    "built_at": "2026-03-26T14:44:51.032Z"
+  },
+  {
+    "agent_id": "ux-designer",
+    "persona_lines": 95,
+    "skill_sections": [],
+    "total_lines": 95,
+    "estimated_tokens": 950,
+    "built_at": "2026-03-26T14:44:51.033Z"
+  },
+  {
+    "agent_id": "validator",
+    "persona_lines": 110,
+    "skill_sections": [],
+    "total_lines": 110,
+    "estimated_tokens": 1100,
+    "built_at": "2026-03-26T14:44:51.033Z"
+  },
+  {
+    "agent_id": "creative-comms",
+    "persona_lines": 116,
+    "skill_sections": [],
+    "total_lines": 116,
+    "estimated_tokens": 1160,
+    "built_at": "2026-03-26T14:44:51.033Z"
+  },
+  {
+    "agent_id": "creative-ideation",
+    "persona_lines": 114,
+    "skill_sections": [],
+    "total_lines": 114,
+    "estimated_tokens": 1140,
+    "built_at": "2026-03-26T14:44:51.033Z"
+  },
+  {
+    "agent_id": "test-architect",
+    "persona_lines": 126,
+    "skill_sections": [],
+    "total_lines": 126,
+    "estimated_tokens": 1260,
+    "built_at": "2026-03-26T14:44:51.034Z"
+  }
+]

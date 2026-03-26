@@ -88,7 +88,7 @@ export class TrajectoryRecorder {
       [storyKey]
     );
     if (!result.length) return [];
-    return result[0].values.map(row => this.rowToTrajectory(result[0].columns, row));
+    return result[0].values.map((row: unknown[]) => this.rowToTrajectory(result[0].columns, row));
   }
 
   async getAgentTrajectories(agentId: string, opts?: {
@@ -109,7 +109,7 @@ export class TrajectoryRecorder {
     const sql = `SELECT * FROM trajectories WHERE ${conditions.join(' AND ')} AND score IS NOT NULL ORDER BY score DESC LIMIT ?`;
     const result = database.exec(sql, values);
     if (!result.length) return [];
-    return result[0].values.map(row => this.rowToTrajectory(result[0].columns, row));
+    return result[0].values.map((row: unknown[]) => this.rowToTrajectory(result[0].columns, row));
   }
 
   async getAllScored(opts?: { minScore?: number; limit?: number }): Promise<Trajectory[]> {
@@ -125,7 +125,7 @@ export class TrajectoryRecorder {
     const sql = `SELECT * FROM trajectories WHERE ${conditions.join(' AND ')} ORDER BY score DESC LIMIT ?`;
     const result = database.exec(sql, values);
     if (!result.length) return [];
-    return result[0].values.map(row => this.rowToTrajectory(result[0].columns, row));
+    return result[0].values.map((row: unknown[]) => this.rowToTrajectory(result[0].columns, row));
   }
 
   private rowToTrajectory(columns: string[], row: unknown[]): Trajectory {

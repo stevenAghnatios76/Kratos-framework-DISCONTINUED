@@ -1,6 +1,6 @@
 {
   "name": "kratos-framework",
-  "version": "1.27.57",
+  "version": "2.2.0",
   "description": "KRATOS — Generative Agile Intelligence Architecture installer for Claude Code and GitHub Copilot",
   "bin": {
     "kratos-framework": "bin/kratos-framework.js",
@@ -41,6 +41,11 @@
     "ora": "^9.3.0",
     "sql.js": "^1.14.1",
     "yaml": "^2.8.3"
+  },
+  "optionalDependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "openai": "^4.80.0",
+    "@google/generative-ai": "^0.24.0"
   },
   "devDependencies": {
     "@types/node": "^25.5.0",

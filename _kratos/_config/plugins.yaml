@@ -1,0 +1,9 @@
+# Kratos Plugin Configuration
+# Plugins extend the framework with custom agents, workflows, skills, tasks, and hooks.
+# Place plugins in _kratos/plugins/{type}/ directories.
+
+plugins_dir: "{installed_path}/plugins"
+auto_discover: true
+
+# Registered plugins
+plugins: []

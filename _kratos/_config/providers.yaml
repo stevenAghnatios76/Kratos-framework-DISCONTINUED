@@ -1,0 +1,109 @@
+# Kratos Framework — Provider Configuration
+# Multi-provider LLM support with tier-based routing.
+# After modifying, run /kratos-build-configs to regenerate resolved configs.
+
+providers:
+  anthropic:
+    enabled: true
+    api_key_env: "ANTHROPIC_API_KEY"
+    models:
+      fast: "claude-haiku-4-5-20251001"
+      standard: "claude-sonnet-4-6"
+      deep_reasoning: "claude-opus-4-6"
+    default_model: "claude-sonnet-4-6"
+    max_tokens: 8192
+    tier: "primary"
+    cost_per_1k_input:
+      fast: 0.001
+      standard: 0.003
+      deep_reasoning: 0.015
+    cost_per_1k_output:
+      fast: 0.005
+      standard: 0.015
+      deep_reasoning: 0.075
+
+  openai:
+    enabled: false
+    api_key_env: "OPENAI_API_KEY"
+    models:
+      fast: "gpt-4o-mini"
+      standard: "gpt-4o"
+      deep_reasoning: "o1"
+    default_model: "gpt-4o"
+    max_tokens: 4096
+    tier: "secondary"
+    cost_per_1k_input:
+      fast: 0.00015
+      standard: 0.005
+      deep_reasoning: 0.015
+    cost_per_1k_output:
+      fast: 0.0006
+      standard: 0.015
+      deep_reasoning: 0.06
+
+  google:
+    enabled: false
+    api_key_env: "GOOGLE_AI_API_KEY"
+    models:
+      fast: "gemini-2.0-flash"
+      standard: "gemini-2.5-pro"
+      deep_reasoning: "gemini-2.5-pro"
+    default_model: "gemini-2.5-pro"
+    max_tokens: 8192
+    tier: "secondary"
+    cost_per_1k_input:
+      fast: 0.0001
+      standard: 0.00125
+      deep_reasoning: 0.00125
+    cost_per_1k_output:
+      fast: 0.0004
+      standard: 0.005
+      deep_reasoning: 0.005
+
+  ollama:
+    enabled: false
+    base_url: "http://localhost:11434"
+    models:
+      fast: "llama3.2:3b"
+      standard: "llama3.1:70b"
+      deep_reasoning: "deepseek-r1:70b"
+    default_model: "llama3.1:70b"
+    max_tokens: 4096
+    tier: "local"
+    cost_per_1k_input:
+      fast: 0
+      standard: 0
+      deep_reasoning: 0
+    cost_per_1k_output:
+      fast: 0
+      standard: 0
+      deep_reasoning: 0
+
+# Failover configuration
+failover:
+  enabled: true
+  max_retries: 2
+  retry_delay_ms: 1000
+  fallback_chain:
+    - "anthropic"
+    - "openai"
+    - "google"
+    - "ollama"
+
+# Tier definitions for cost routing
+tiers:
+  no_llm:
+    range: [0, 10]
+    description: "No LLM needed — static operations"
+  fast:
+    range: [11, 30]
+    description: "Simple tasks — use cheapest available model"
+    preferred_model: "fast"
+  standard:
+    range: [31, 70]
+    description: "Standard tasks — use balanced model"
+    preferred_model: "standard"
+  deep_reasoning:
+    range: [71, 100]
+    description: "Complex tasks — use most capable model"
+    preferred_model: "deep_reasoning"

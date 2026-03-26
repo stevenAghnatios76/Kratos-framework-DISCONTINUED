@@ -23,7 +23,7 @@ const CHECKPOINT_DIR = path.join(KRATOS_ROOT, '_memory', 'checkpoints');
 program
   .name('kratos')
   .description('Kratos Framework CLI — AI-powered product development')
-  .version('2.1.0');
+  .version('2.2.0');
 
 // ============================================================
 // MEMORY COMMANDS
@@ -37,7 +37,7 @@ memory
   .option('-p, --partition <name>', 'Filter by partition')
   .option('-l, --limit <n>', 'Max results', '10')
   .action(async (query: string, opts: { agent?: string; partition?: string; limit: string }) => {
-    const { MemoryManager } = await import('../../intelligence/memory/memory-manager');
+    const { MemoryManager } = await import('../../intelligence/memory/memory-manager.js');
     const mm = new MemoryManager(MEMORY_DB_PATH);
     await mm.init();
 
@@ -64,7 +64,7 @@ memory
   .command('stats')
   .description('Show memory statistics')
   .action(async () => {
-    const { MemoryManager } = await import('../../intelligence/memory/memory-manager');
+    const { MemoryManager } = await import('../../intelligence/memory/memory-manager.js');
     const mm = new MemoryManager(MEMORY_DB_PATH);
     await mm.init();
     const stats = await mm.getStats();
@@ -91,7 +91,7 @@ memory
   .option('-a, --agent <id>', 'Export specific agent only')
   .option('-o, --output <dir>', 'Output directory', path.join(KRATOS_ROOT, '_memory'))
   .action(async (opts: { agent?: string; output: string }) => {
-    const { MemoryManager } = await import('../../intelligence/memory/memory-manager');
+    const { MemoryManager } = await import('../../intelligence/memory/memory-manager.js');
     const mm = new MemoryManager(MEMORY_DB_PATH);
     await mm.init();
 
@@ -110,8 +110,8 @@ memory
   .command('migrate')
   .description('Import existing markdown sidecars into database')
   .action(async () => {
-    const { MemoryManager } = await import('../../intelligence/memory/memory-manager');
-    const { SidecarMigration } = await import('../../intelligence/memory/migration');
+    const { MemoryManager } = await import('../../intelligence/memory/memory-manager.js');
+    const { SidecarMigration } = await import('../../intelligence/memory/migration.js');
     const mm = new MemoryManager(MEMORY_DB_PATH);
     await mm.init();
 
@@ -135,7 +135,7 @@ memory
   .command('expire')
   .description('Remove expired entries')
   .action(async () => {
-    const { MemoryManager } = await import('../../intelligence/memory/memory-manager');
+    const { MemoryManager } = await import('../../intelligence/memory/memory-manager.js');
     const mm = new MemoryManager(MEMORY_DB_PATH);
     await mm.init();
     const count = await mm.expireStaleEntries();
@@ -153,8 +153,8 @@ learn
   .description('Extract patterns from scored trajectories')
   .option('-a, --agent <id>', 'Distill for specific agent')
   .action(async (opts: { agent?: string }) => {
-    const { MemoryManager } = await import('../../intelligence/memory/memory-manager');
-    const { PatternDistiller } = await import('../../intelligence/learning/pattern-distiller');
+    const { MemoryManager } = await import('../../intelligence/memory/memory-manager.js');
+    const { PatternDistiller } = await import('../../intelligence/learning/pattern-distiller.js');
     const mm = new MemoryManager(MEMORY_DB_PATH);
     await mm.init();
 
@@ -175,7 +175,7 @@ learn
   .option('-a, --agent <id>', 'Filter by agent')
   .option('--anti', 'Show anti-patterns instead')
   .action(async (opts: { agent?: string; anti?: boolean }) => {
-    const { MemoryManager } = await import('../../intelligence/memory/memory-manager');
+    const { MemoryManager } = await import('../../intelligence/memory/memory-manager.js');
     const mm = new MemoryManager(MEMORY_DB_PATH);
     await mm.init();
 
@@ -204,8 +204,8 @@ learn
   .command('protect')
   .description('Run forgetting shield protection cycle')
   .action(async () => {
-    const { MemoryManager } = await import('../../intelligence/memory/memory-manager');
-    const { ForgettingShield } = await import('../../intelligence/learning/forgetting-shield');
+    const { MemoryManager } = await import('../../intelligence/memory/memory-manager.js');
+    const { ForgettingShield } = await import('../../intelligence/learning/forgetting-shield.js');
     const mm = new MemoryManager(MEMORY_DB_PATH);
     await mm.init();
 
@@ -230,7 +230,7 @@ sprint
   .description('Generate parallel execution plan for current sprint')
   .option('-s, --status <path>', 'Sprint status file path')
   .action(async (opts: { status?: string }) => {
-    const { DependencyGraph } = await import('./dependency-graph');
+    const { DependencyGraph } = await import('./dependency-graph.js');
     const statusPath = opts.status || path.join(PROJECT_ROOT, 'docs', 'implementation-artifacts', 'sprint-status.yaml');
 
     if (!fs.existsSync(statusPath)) {
@@ -247,7 +247,7 @@ sprint
   .command('reviews <story_key>')
   .description('Run all 6 review gates in parallel for a story')
   .action(async (storyKey: string) => {
-    const { ParallelExecutor } = await import('./parallel-executor');
+    const { ParallelExecutor } = await import('./parallel-executor.js');
     const executor = new ParallelExecutor({
       max_concurrent: 6,
       mode: 'parallel',
@@ -267,13 +267,225 @@ sprint
   });
 
 // ============================================================
+// PROVIDERS COMMANDS
+// ============================================================
+const providers = program.command('providers').description('Manage LLM providers');
+
+providers
+  .command('list')
+  .description('Show configured providers and availability')
+  .action(async () => {
+    const { ProviderRegistry } = await import('../../providers/index.js');
+    const registry = new ProviderRegistry();
+    const configPath = path.join(KRATOS_ROOT, '_config', 'providers.yaml');
+    await registry.init(configPath);
+
+    const list = registry.listProviders();
+    console.log('LLM Providers:\n');
+    for (const p of list) {
+      const status = p.available ? 'AVAILABLE' : 'DISABLED';
+      console.log(`  [${status}] ${p.name} (${p.tier})`);
+      console.log(`    fast:           ${p.models.fast}`);
+      console.log(`    standard:       ${p.models.standard}`);
+      console.log(`    deep_reasoning: ${p.models.deep_reasoning}`);
+      console.log('');
+    }
+  });
+
+providers
+  .command('test <name>')
+  .description('Send test prompt to a provider')
+  .action(async (name: string) => {
+    const { ProviderRegistry } = await import('../../providers/index.js');
+    const registry = new ProviderRegistry();
+    const configPath = path.join(KRATOS_ROOT, '_config', 'providers.yaml');
+    await registry.init(configPath);
+
+    const provider = registry.getProvider(name);
+    if (!provider) {
+      console.error(`Unknown provider: ${name}`);
+      process.exit(1);
+    }
+    if (!provider.available) {
+      console.error(`Provider ${name} is not available (SDK missing or not configured)`);
+      process.exit(1);
+    }
+
+    console.log(`Testing ${name}...`);
+    const result = await provider.test();
+    console.log(`  OK: ${result.ok}`);
+    console.log(`  Latency: ${result.latency_ms}ms`);
+    if (result.error) console.log(`  Error: ${result.error}`);
+  });
+
+providers
+  .command('cost-estimate')
+  .description('Estimate sprint cost across providers')
+  .option('-t, --tokens <n>', 'Estimated total tokens per sprint', '500000')
+  .action(async (opts: { tokens: string }) => {
+    const { ProviderRegistry } = await import('../../providers/index.js');
+    const registry = new ProviderRegistry();
+    const configPath = path.join(KRATOS_ROOT, '_config', 'providers.yaml');
+    await registry.init(configPath);
+
+    const totalTokens = parseInt(opts.tokens);
+    const inputTokens = Math.round(totalTokens * 0.7);
+    const outputTokens = Math.round(totalTokens * 0.3);
+
+    console.log(`Sprint Cost Estimate (${totalTokens.toLocaleString()} tokens):\n`);
+    for (const tier of ['fast', 'standard', 'deep_reasoning'] as const) {
+      const estimates = registry.estimateCost(inputTokens, outputTokens, tier);
+      console.log(`  ${tier}:`);
+      for (const [provider, amount] of Object.entries(estimates)) {
+        console.log(`    ${provider}: $${(amount as number).toFixed(4)}`);
+      }
+    }
+  });
+
+// ============================================================
+// COST COMMANDS
+// ============================================================
+const cost = program.command('cost').description('Cost tracking and routing');
+
+cost
+  .command('report')
+  .description('Show cost report')
+  .option('-p, --period <period>', 'Time period: today, week, month, all', 'today')
+  .action(async (opts: { period: string }) => {
+    const { MemoryManager } = await import('../../intelligence/memory/memory-manager.js');
+    const { BudgetTracker } = await import('../../providers/budget-tracker.js');
+    const mm = new MemoryManager(MEMORY_DB_PATH);
+    await mm.init();
+
+    const tracker = new BudgetTracker(mm);
+    const report = await tracker.getSpend(opts.period as 'today' | 'week' | 'month' | 'all');
+    console.log(tracker.formatReport(report));
+
+    await mm.close();
+  });
+
+cost
+  .command('route <workflow>')
+  .description('Preview routing decision for a workflow')
+  .action(async (workflow: string) => {
+    const { CostRouter } = await import('../../providers/cost-router.js');
+    const router = new CostRouter();
+    const decision = router.route(workflow);
+    console.log(router.formatDecision(decision));
+  });
+
+cost
+  .command('savings')
+  .description('Show savings vs all-Opus baseline')
+  .option('-p, --period <period>', 'Time period: today, week, month, all', 'month')
+  .action(async (opts: { period: string }) => {
+    const { MemoryManager } = await import('../../intelligence/memory/memory-manager.js');
+    const { BudgetTracker } = await import('../../providers/budget-tracker.js');
+    const mm = new MemoryManager(MEMORY_DB_PATH);
+    await mm.init();
+
+    const tracker = new BudgetTracker(mm);
+    const savings = await tracker.calculateSavings(opts.period as 'today' | 'week' | 'month' | 'all');
+
+    console.log(`Cost Savings (${opts.period}):`);
+    console.log(`  Actual cost:    $${savings.actual_cost.toFixed(4)}`);
+    console.log(`  Opus baseline:  $${savings.opus_baseline.toFixed(4)}`);
+    console.log(`  Savings:        $${savings.savings.toFixed(4)} (${savings.savings_pct.toFixed(1)}%)`);
+
+    await mm.close();
+  });
+
+// ============================================================
+// VALIDATE COMMANDS
+// ============================================================
+const validate = program.command('validate').description('Artifact validation');
+
+validate
+  .command('artifact <path>')
+  .description('Validate artifact claims against ground truth')
+  .action(async (artifactPath: string) => {
+    const { MemoryManager } = await import('../../intelligence/memory/memory-manager.js');
+    const { GroundTruth } = await import('../../intelligence/validation/ground-truth.js');
+    const { Validator } = await import('../../intelligence/validation/validator.js');
+    const mm = new MemoryManager(MEMORY_DB_PATH);
+    await mm.init();
+
+    const gt = new GroundTruth(mm, PROJECT_ROOT);
+    await gt.refresh();
+
+    const validator = new Validator(gt);
+    const resolvedPath = path.resolve(artifactPath);
+    const report = await validator.validate(resolvedPath);
+    console.log(validator.formatReport(report));
+
+    await mm.close();
+    process.exit(report.pass ? 0 : 1);
+  });
+
+validate
+  .command('refresh-ground-truth')
+  .description('Rescan filesystem and update ground truth')
+  .action(async () => {
+    const { MemoryManager } = await import('../../intelligence/memory/memory-manager.js');
+    const { GroundTruth } = await import('../../intelligence/validation/ground-truth.js');
+    const mm = new MemoryManager(MEMORY_DB_PATH);
+    await mm.init();
+
+    const gt = new GroundTruth(mm, PROJECT_ROOT);
+    const result = await gt.refresh();
+
+    console.log(`Ground truth refreshed:`);
+    console.log(`  Facts stored: ${result.facts_stored}`);
+    for (const [category, count] of Object.entries(result.categories)) {
+      console.log(`  ${category}: ${count}`);
+    }
+
+    await mm.close();
+  });
+
+validate
+  .command('ground-truth')
+  .description('Show cached ground truth facts')
+  .option('-c, --category <cat>', 'Filter by category: file, dependency, config, structure')
+  .action(async (opts: { category?: string }) => {
+    const { MemoryManager } = await import('../../intelligence/memory/memory-manager.js');
+    const { GroundTruth } = await import('../../intelligence/validation/ground-truth.js');
+    const mm = new MemoryManager(MEMORY_DB_PATH);
+    await mm.init();
+
+    const gt = new GroundTruth(mm, PROJECT_ROOT);
+    const facts = await gt.getFacts(opts.category);
+
+    if (facts.length === 0) {
+      console.log('No ground truth facts found. Run: kratos validate refresh-ground-truth');
+    } else {
+      console.log(`Ground Truth Facts (${facts.length}):\n`);
+      const grouped: Record<string, typeof facts> = {};
+      for (const f of facts) {
+        if (!grouped[f.category]) grouped[f.category] = [];
+        grouped[f.category].push(f);
+      }
+      for (const [category, items] of Object.entries(grouped)) {
+        console.log(`  ${category} (${items.length}):`);
+        for (const item of items.slice(0, 20)) {
+          console.log(`    ${item.key}: ${item.value}`);
+        }
+        if (items.length > 20) console.log(`    ... and ${items.length - 20} more`);
+        console.log('');
+      }
+    }
+
+    await mm.close();
+  });
+
+// ============================================================
 // STATUS COMMAND
 // ============================================================
 program
   .command('status')
   .description('Show current sprint status + agent health')
   .action(async () => {
-    const { MemoryManager } = await import('../../intelligence/memory/memory-manager');
+    const { MemoryManager } = await import('../../intelligence/memory/memory-manager.js');
     const mm = new MemoryManager(MEMORY_DB_PATH);
     await mm.init();
     const stats = await mm.getStats();
@@ -360,6 +572,64 @@ program
       detail: fs.existsSync(phase1Checkpoint) ? 'Completed' : 'Not found',
     });
 
+    // Phase 3: providers.yaml
+    const providersYamlPath = path.join(KRATOS_ROOT, '_config', 'providers.yaml');
+    checks.push({
+      name: 'providers.yaml exists',
+      passed: fs.existsSync(providersYamlPath),
+      detail: fs.existsSync(providersYamlPath) ? 'OK' : 'Missing — Phase 3 not installed',
+    });
+
+    // Phase 3: optional deps
+    const optDeps = ['@anthropic-ai/sdk', 'openai', '@google/generative-ai'];
+    for (const dep of optDeps) {
+      let installed = false;
+      try { require.resolve(dep); installed = true; } catch { /* optional */ }
+      checks.push({
+        name: `${dep} (optional)`,
+        passed: true, // optional deps don't fail the check
+        detail: installed ? 'Installed' : 'Not installed (optional)',
+      });
+    }
+
+    // Phase 3 checkpoint
+    const phase3Checkpoint = path.join(CHECKPOINT_DIR, 'upgrade-phase-3.yaml');
+    checks.push({
+      name: 'Phase 3 checkpoint',
+      passed: fs.existsSync(phase3Checkpoint),
+      detail: fs.existsSync(phase3Checkpoint) ? 'Completed' : 'Not found',
+    });
+
+    // Phase 4: observability modules
+    checks.push({
+      name: 'Observability metrics module',
+      passed: fs.existsSync(path.join(KRATOS_ROOT, 'observability', 'metrics', 'index.ts')),
+      detail: fs.existsSync(path.join(KRATOS_ROOT, 'observability', 'metrics', 'index.ts')) ? 'OK' : 'Missing',
+    });
+    checks.push({
+      name: 'Observability codebase module',
+      passed: fs.existsSync(path.join(KRATOS_ROOT, 'observability', 'codebase', 'index.ts')),
+      detail: fs.existsSync(path.join(KRATOS_ROOT, 'observability', 'codebase', 'index.ts')) ? 'OK' : 'Missing',
+    });
+    checks.push({
+      name: 'Observability plugins module',
+      passed: fs.existsSync(path.join(KRATOS_ROOT, 'observability', 'plugins', 'index.ts')),
+      detail: fs.existsSync(path.join(KRATOS_ROOT, 'observability', 'plugins', 'index.ts')) ? 'OK' : 'Missing',
+    });
+    checks.push({
+      name: 'plugins.yaml exists',
+      passed: fs.existsSync(path.join(KRATOS_ROOT, '_config', 'plugins.yaml')),
+      detail: fs.existsSync(path.join(KRATOS_ROOT, '_config', 'plugins.yaml')) ? 'OK' : 'Missing',
+    });
+
+    // Phase 4 checkpoint
+    const phase4Checkpoint = path.join(CHECKPOINT_DIR, 'upgrade-phase-4.yaml');
+    checks.push({
+      name: 'Phase 4 checkpoint',
+      passed: fs.existsSync(phase4Checkpoint),
+      detail: fs.existsSync(phase4Checkpoint) ? 'Completed' : 'Not found',
+    });
+
     console.log('Kratos Health Check:\n');
     let allPassed = true;
     for (const check of checks) {
@@ -403,16 +673,17 @@ hooks
   .command('list')
   .description('List all configured hooks')
   .action(async () => {
-    const { HookExecutor } = await import('./hook-executor');
+    const { HookExecutor } = await import('./hook-executor.js');
     const hooksConfigPath = path.join(KRATOS_ROOT, '_config', 'hooks.yaml');
     const executor = new HookExecutor(hooksConfigPath);
     await executor.loadConfig();
     const allHooks = executor.listHooks();
 
     for (const [point, defs] of Object.entries(allHooks)) {
-      const count = defs.length;
+      const hookDefs = defs as { command: string; on_fail: string }[];
+      const count = hookDefs.length;
       console.log(`${point}: ${count === 0 ? '(none)' : `${count} hook(s)`}`);
-      for (const def of defs) {
+      for (const def of hookDefs) {
         console.log(`  → ${def.command} [on_fail: ${def.on_fail}]`);
       }
     }
@@ -422,7 +693,7 @@ hooks
   .command('test <hookPoint>')
   .description('Test-fire a hook point with sample context')
   .action(async (hookPoint: string) => {
-    const { HookExecutor } = await import('./hook-executor');
+    const { HookExecutor } = await import('./hook-executor.js');
     const hooksConfigPath = path.join(KRATOS_ROOT, '_config', 'hooks.yaml');
     const executor = new HookExecutor(hooksConfigPath);
     await executor.loadConfig();
@@ -440,6 +711,439 @@ hooks
       for (const r of results) {
         console.log(`  [${r.exit_code === 0 ? 'OK' : 'ERR'}] ${r.command} (${r.duration_ms}ms) → ${r.action_taken}`);
       }
+    }
+  });
+
+// ============================================================
+// METRICS COMMANDS (Phase 4)
+// ============================================================
+const metrics = program.command('metrics').description('Observability metrics');
+
+metrics
+  .command('sprint')
+  .description('Show sprint velocity, cycle time, burndown, and health')
+  .option('-s, --status <path>', 'Sprint status file path')
+  .action(async (opts: { status?: string }) => {
+    const { MemoryManager } = await import('../../intelligence/memory/memory-manager.js');
+    const { SprintMetrics } = await import('../../observability/metrics/sprint-metrics.js');
+    const mm = new MemoryManager(MEMORY_DB_PATH);
+    await mm.init();
+
+    const statusPath = opts.status || path.join(PROJECT_ROOT, 'docs', 'implementation-artifacts', 'sprint-status.yaml');
+    const sm = new SprintMetrics(mm);
+    try {
+      const report = sm.calculate(statusPath);
+      sm.recordMetrics(report);
+      console.log(sm.formatReport(report));
+    } catch (err) {
+      console.error((err as Error).message);
+      process.exit(1);
+    }
+    await mm.close();
+  });
+
+metrics
+  .command('agents')
+  .description('Show agent leaderboard with pass rates and learning trends')
+  .action(async () => {
+    const { MemoryManager } = await import('../../intelligence/memory/memory-manager.js');
+    const { AgentMetrics } = await import('../../observability/metrics/agent-metrics.js');
+    const mm = new MemoryManager(MEMORY_DB_PATH);
+    await mm.init();
+
+    const am = new AgentMetrics(mm);
+    const report = am.calculate();
+    am.recordMetrics(report);
+    console.log(am.formatReport(report));
+    await mm.close();
+  });
+
+metrics
+  .command('quality')
+  .description('Show first-pass rate, gate pass rates, and quality score')
+  .action(async () => {
+    const { MemoryManager } = await import('../../intelligence/memory/memory-manager.js');
+    const { QualityMetrics } = await import('../../observability/metrics/quality-metrics.js');
+    const mm = new MemoryManager(MEMORY_DB_PATH);
+    await mm.init();
+
+    const qm = new QualityMetrics(mm);
+    const report = qm.calculate();
+    qm.recordMetrics(report);
+    console.log(qm.formatReport(report));
+    await mm.close();
+  });
+
+metrics
+  .command('cost')
+  .description('Show cost per story, tier distribution, savings, and forecast')
+  .option('-p, --period <period>', 'Time period: today, week, month, all', 'month')
+  .action(async (opts: { period: string }) => {
+    const { MemoryManager } = await import('../../intelligence/memory/memory-manager.js');
+    const { CostMetrics } = await import('../../observability/metrics/cost-metrics.js');
+    const mm = new MemoryManager(MEMORY_DB_PATH);
+    await mm.init();
+
+    const cm = new CostMetrics(mm);
+    const report = cm.calculate(opts.period as 'today' | 'week' | 'month' | 'all');
+    cm.recordMetrics(report);
+    console.log(cm.formatReport(report));
+    await mm.close();
+  });
+
+metrics
+  .command('export')
+  .description('Export all metrics as JSON')
+  .option('-t, --type <type>', 'Filter by metric type')
+  .option('-o, --output <file>', 'Output file path')
+  .action(async (opts: { type?: string; output?: string }) => {
+    const { MemoryManager } = await import('../../intelligence/memory/memory-manager.js');
+    const { MetricsCollector } = await import('../../observability/metrics/collector.js');
+    const mm = new MemoryManager(MEMORY_DB_PATH);
+    await mm.init();
+
+    const mc = new MetricsCollector(mm);
+    const data = mc.exportJson({ metric_type: opts.type });
+
+    if (opts.output) {
+      fs.writeFileSync(opts.output, JSON.stringify(data, null, 2));
+      console.log(`Exported ${data.length} metrics to ${opts.output}`);
+    } else {
+      console.log(JSON.stringify(data, null, 2));
+    }
+    await mm.close();
+  });
+
+// ============================================================
+// CODEBASE COMMANDS (Phase 4)
+// ============================================================
+const codebase = program.command('codebase').description('Codebase intelligence');
+
+codebase
+  .command('scan')
+  .description('Run incremental codebase scan with checksums')
+  .action(async () => {
+    const { MemoryManager } = await import('../../intelligence/memory/memory-manager.js');
+    const { CodebaseScanner } = await import('../../observability/codebase/scanner.js');
+    const mm = new MemoryManager(MEMORY_DB_PATH);
+    await mm.init();
+
+    const scanner = new CodebaseScanner(mm, PROJECT_ROOT);
+    const result = scanner.scan();
+    console.log(scanner.formatReport(result));
+    await mm.close();
+  });
+
+codebase
+  .command('drift')
+  .description('Detect architecture doc vs reality drift')
+  .action(async () => {
+    const { DriftDetector } = await import('../../observability/codebase/drift-detector.js');
+    const detector = new DriftDetector(PROJECT_ROOT);
+    const report = detector.detect();
+    console.log(detector.formatReport(report));
+    process.exit(report.drift_score > 50 ? 1 : 0);
+  });
+
+codebase
+  .command('debt')
+  .description('Detect technical debt: complexity, size, test gaps')
+  .action(async () => {
+    const { DebtTracker } = await import('../../observability/codebase/debt-tracker.js');
+    const tracker = new DebtTracker(PROJECT_ROOT);
+    const report = tracker.analyze();
+    console.log(tracker.formatReport(report));
+  });
+
+codebase
+  .command('hotspots')
+  .description('Show files with most issues and changes')
+  .action(async () => {
+    const { DebtTracker } = await import('../../observability/codebase/debt-tracker.js');
+    const tracker = new DebtTracker(PROJECT_ROOT);
+    const report = tracker.analyze();
+
+    console.log('Codebase Hotspots');
+    console.log('='.repeat(50));
+    console.log('');
+    if (report.hotspots.length === 0) {
+      console.log('No hotspots detected.');
+    } else {
+      for (const h of report.hotspots) {
+        console.log(`  ${h.file}: ${h.issues} issues`);
+      }
+    }
+  });
+
+codebase
+  .command('ownership')
+  .description('Show file-to-story-to-agent ownership map')
+  .action(async () => {
+    const { OwnershipMap } = await import('../../observability/codebase/ownership-map.js');
+    const ownership = new OwnershipMap(CHECKPOINT_DIR);
+    const report = ownership.build();
+    console.log(ownership.formatReport(report));
+  });
+
+codebase
+  .command('stats')
+  .description('Show codebase size and language breakdown')
+  .action(async () => {
+    const { MemoryManager } = await import('../../intelligence/memory/memory-manager.js');
+    const { CodebaseScanner } = await import('../../observability/codebase/scanner.js');
+    const mm = new MemoryManager(MEMORY_DB_PATH);
+    await mm.init();
+
+    const scanner = new CodebaseScanner(mm, PROJECT_ROOT);
+    const stats = scanner.getStats();
+    console.log('Codebase Stats');
+    console.log('='.repeat(50));
+    console.log(`  Total files: ${stats.total_files}`);
+    console.log(`  Total lines: ${stats.total_lines.toLocaleString()}`);
+    console.log('');
+    console.log('By Language:');
+    const sorted = Object.entries(stats.by_language).sort((a, b) => b[1] - a[1]);
+    for (const [lang, count] of sorted) {
+      console.log(`  ${lang}: ${count} files`);
+    }
+    await mm.close();
+  });
+
+// ============================================================
+// PLUGINS COMMANDS (Phase 4)
+// ============================================================
+const plugins = program.command('plugins').description('Plugin management');
+
+plugins
+  .command('list')
+  .description('List all discovered and registered plugins')
+  .action(async () => {
+    const { PluginManifest } = await import('../../observability/plugins/plugin-manifest.js');
+    const { PluginLoader } = await import('../../observability/plugins/plugin-loader.js');
+    const { PluginRegistry } = await import('../../observability/plugins/plugin-registry.js');
+
+    const configPath = path.join(KRATOS_ROOT, '_config', 'plugins.yaml');
+    const pluginsDir = path.join(KRATOS_ROOT, 'plugins');
+
+    const manifest = new PluginManifest(configPath);
+    manifest.load();
+    const loader = new PluginLoader(pluginsDir, manifest);
+    const registry = new PluginRegistry(manifest, loader);
+
+    const allPlugins = registry.discoverAndList();
+    console.log(registry.formatList(allPlugins));
+  });
+
+plugins
+  .command('discover')
+  .description('Scan plugins directory for unregistered plugins')
+  .action(async () => {
+    const { PluginManifest } = await import('../../observability/plugins/plugin-manifest.js');
+    const { PluginLoader } = await import('../../observability/plugins/plugin-loader.js');
+
+    const configPath = path.join(KRATOS_ROOT, '_config', 'plugins.yaml');
+    const pluginsDir = path.join(KRATOS_ROOT, 'plugins');
+
+    const manifest = new PluginManifest(configPath);
+    manifest.load();
+    const loader = new PluginLoader(pluginsDir, manifest);
+    const discovered = loader.discover();
+
+    if (discovered.length === 0) {
+      console.log('No plugins discovered.');
+    } else {
+      console.log(`Discovered ${discovered.length} plugin(s):`);
+      for (const p of discovered) {
+        console.log(`  ${p.name} (${p.type}) — ${p.has_manifest ? 'has manifest' : 'no manifest'}`);
+      }
+    }
+  });
+
+plugins
+  .command('validate <name>')
+  .description('Validate a plugin definition')
+  .action(async (name: string) => {
+    const { PluginManifest } = await import('../../observability/plugins/plugin-manifest.js');
+    const { PluginLoader } = await import('../../observability/plugins/plugin-loader.js');
+
+    const configPath = path.join(KRATOS_ROOT, '_config', 'plugins.yaml');
+    const pluginsDir = path.join(KRATOS_ROOT, 'plugins');
+
+    const manifest = new PluginManifest(configPath);
+    manifest.load();
+    const plugin = manifest.getPlugin(name);
+    if (!plugin) {
+      console.error(`Plugin not found: ${name}`);
+      process.exit(1);
+    }
+
+    const loader = new PluginLoader(pluginsDir, manifest);
+    const result = loader.validate(plugin);
+
+    console.log(`Validation for ${name}: ${result.valid ? 'VALID' : 'INVALID'}`);
+    if (result.errors.length > 0) {
+      console.log('Errors:');
+      for (const e of result.errors) console.log(`  ${e}`);
+    }
+    if (result.warnings.length > 0) {
+      console.log('Warnings:');
+      for (const w of result.warnings) console.log(`  ${w}`);
+    }
+    process.exit(result.valid ? 0 : 1);
+  });
+
+plugins
+  .command('enable <name>')
+  .description('Enable a registered plugin')
+  .action(async (name: string) => {
+    const { PluginManifest } = await import('../../observability/plugins/plugin-manifest.js');
+    const { PluginLoader } = await import('../../observability/plugins/plugin-loader.js');
+    const { PluginRegistry } = await import('../../observability/plugins/plugin-registry.js');
+
+    const configPath = path.join(KRATOS_ROOT, '_config', 'plugins.yaml');
+    const pluginsDir = path.join(KRATOS_ROOT, 'plugins');
+
+    const manifest = new PluginManifest(configPath);
+    manifest.load();
+    const loader = new PluginLoader(pluginsDir, manifest);
+    const registry = new PluginRegistry(manifest, loader);
+    const result = registry.enable(name);
+    console.log(result.message);
+    process.exit(result.success ? 0 : 1);
+  });
+
+plugins
+  .command('disable <name>')
+  .description('Disable a registered plugin')
+  .action(async (name: string) => {
+    const { PluginManifest } = await import('../../observability/plugins/plugin-manifest.js');
+    const { PluginLoader } = await import('../../observability/plugins/plugin-loader.js');
+    const { PluginRegistry } = await import('../../observability/plugins/plugin-registry.js');
+
+    const configPath = path.join(KRATOS_ROOT, '_config', 'plugins.yaml');
+    const pluginsDir = path.join(KRATOS_ROOT, 'plugins');
+
+    const manifest = new PluginManifest(configPath);
+    manifest.load();
+    const loader = new PluginLoader(pluginsDir, manifest);
+    const registry = new PluginRegistry(manifest, loader);
+    const result = registry.disable(name);
+    console.log(result.message);
+    process.exit(result.success ? 0 : 1);
+  });
+
+plugins
+  .command('create <name>')
+  .description('Create a new plugin scaffold')
+  .option('-t, --type <type>', 'Plugin type: agent, workflow, skill, task, hook', 'agent')
+  .action(async (name: string, opts: { type: string }) => {
+    const { PluginManifest } = await import('../../observability/plugins/plugin-manifest.js');
+    const { PluginLoader } = await import('../../observability/plugins/plugin-loader.js');
+    const { PluginRegistry } = await import('../../observability/plugins/plugin-registry.js');
+
+    const configPath = path.join(KRATOS_ROOT, '_config', 'plugins.yaml');
+    const pluginsDir = path.join(KRATOS_ROOT, 'plugins');
+
+    const manifest = new PluginManifest(configPath);
+    manifest.load();
+    const loader = new PluginLoader(pluginsDir, manifest);
+    const registry = new PluginRegistry(manifest, loader);
+
+    const validTypes = ['agent', 'workflow', 'skill', 'task', 'hook'];
+    if (!validTypes.includes(opts.type)) {
+      console.error(`Invalid type: ${opts.type}. Must be one of: ${validTypes.join(', ')}`);
+      process.exit(1);
+    }
+
+    const result = registry.create(name, opts.type as 'agent' | 'workflow' | 'skill' | 'task' | 'hook');
+    console.log(result.message);
+    process.exit(result.success ? 0 : 1);
+  });
+
+// ============================================================
+// CONTEXT COMMANDS (Phase 4)
+// ============================================================
+const context = program.command('context').description('Context optimization');
+
+context
+  .command('build')
+  .description('Pre-compile agent context caches')
+  .action(async () => {
+    const { ContextCache } = await import('../engine/context-cache.js');
+    const cache = new ContextCache(KRATOS_ROOT);
+    const contexts = cache.buildAll();
+    console.log(`Built context caches for ${contexts.length} agent(s).`);
+    for (const ctx of contexts) {
+      console.log(`  ${ctx.agent_id}: ${ctx.estimated_tokens.toLocaleString()} tokens (${ctx.total_lines} lines)`);
+    }
+  });
+
+context
+  .command('stats')
+  .description('Show context cache statistics and savings estimate')
+  .action(async () => {
+    const { ContextCache } = await import('../engine/context-cache.js');
+    const cache = new ContextCache(KRATOS_ROOT);
+    const stats = cache.getStats();
+    console.log(cache.formatStats(stats));
+  });
+
+context
+  .command('invalidate')
+  .description('Clear all context caches')
+  .action(async () => {
+    const { ContextCache } = await import('../engine/context-cache.js');
+    const cache = new ContextCache(KRATOS_ROOT);
+    const count = cache.invalidate();
+    console.log(`Invalidated ${count} cache file(s).`);
+  });
+
+context
+  .command('budget [agentId]')
+  .description('Check if an agent context fits within the 40K token budget')
+  .action(async (agentId?: string) => {
+    const { ContextCache } = await import('../engine/context-cache.js');
+    const cache = new ContextCache(KRATOS_ROOT);
+
+    if (agentId) {
+      const result = cache.checkBudget(agentId);
+      console.log(`Budget check for ${agentId}:`);
+      console.log(`  Tokens:  ${result.tokens.toLocaleString()}`);
+      console.log(`  Budget:  ${result.budget.toLocaleString()}`);
+      console.log(`  Fits:    ${result.fits ? 'YES' : 'NO'}`);
+      if (result.overage > 0) {
+        console.log(`  Overage: ${result.overage.toLocaleString()} tokens`);
+      }
+    } else {
+      const stats = cache.getStats();
+      console.log(`Context budget: ${stats.budget_max.toLocaleString()} tokens`);
+      console.log(`Max usage:      ${stats.budget_used_pct.toFixed(1)}%`);
+      console.log(`Agents cached:  ${stats.agents_cached}`);
+    }
+  });
+
+context
+  .command('skill-sections [skillName]')
+  .description('List skill sections available for JIT loading')
+  .action(async (skillName?: string) => {
+    const { SkillIndex } = await import('../engine/skill-index.js');
+    const skillsDir = path.join(KRATOS_ROOT, 'dev', 'skills');
+    const cacheDir = path.join(KRATOS_ROOT, '.cache', 'skills');
+    const idx = new SkillIndex(skillsDir, cacheDir);
+
+    if (skillName) {
+      const sections = idx.listSections(skillName);
+      if (sections.length === 0) {
+        console.log(`No sections found for skill: ${skillName}`);
+      } else {
+        console.log(`Sections for ${skillName}:`);
+        for (const s of sections) {
+          console.log(`  ${s.heading} (${s.line_count} lines)`);
+        }
+      }
+    } else {
+      const index = idx.build();
+      console.log(idx.formatIndex(index));
     }
   });
 
