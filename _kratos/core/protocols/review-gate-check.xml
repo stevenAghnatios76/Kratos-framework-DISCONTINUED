@@ -2,24 +2,54 @@
 <description>
   Shared protocol invoked by each review workflow after updating its Review Gate row.
   Checks if ALL reviews have passed and transitions story to done if so.
+  Supports infrastructure review gate adaptations (ADR-022 §10.16.6):
+  stories tracing to infra requirements (IR-/OR-/SR- prefixes) use adapted gate criteria.
 </description>
 <critical>
   <mandate>The Review Gate table must have EXACTLY 6 rows: Code Review, QA Tests, Security Review, Test Automation, Test Review, Performance Review. No other rows are valid. If extra rows exist, remove them.</mandate>
+  <mandate>For infrastructure stories, 4 of 6 gates use adapted criteria. Code Review and Security Review remain unchanged for all story types.</mandate>
 </critical>
-<step n="1" title="Read Review Gate">
+
+<!-- Infra Review Gate Substitutions (FR-128, ADR-022 §10.16.6)
+     When a story traces to infrastructure requirements, the following gate
+     criteria are substituted. The gate row NAMES in the Review Gate table
+     stay the same (for compatibility), but the review workflows apply
+     infra-specific criteria instead of standard application criteria.
+
+     | Standard Gate      | Infra Equivalent                    | Changed? |
+     | Code Review        | IaC Code Review                     | Unchanged — same workflow, IaC expertise expected |
+     | QA Tests           | Policy-as-Code Validation           | Checkov/tfsec/OPA pass replaces unit/integration test pass |
+     | Security Review    | Security Review                     | Unchanged — critical for infrastructure |
+     | Test Automation    | Plan Validation + Drift Checks      | terraform plan assertions replace automated test coverage |
+     | Test Review        | Policy Review                       | OPA/Rego coverage replaces test quality review |
+     | Performance Review | Cost Review + Scaling Validation    | Cost analysis and autoscaling validation replace load testing |
+-->
+
+<step n="1" title="Read Review Gate and Determine Gate Type">
   <action>Read the story file's Review Gate table</action>
   <action>If Review Gate section is missing: initialize it with EXACTLY 6 rows — Code Review (PENDING), QA Tests (PENDING), Security Review (PENDING), Test Automation (PENDING), Test Review (PENDING), Performance Review (PENDING). Do NOT add any other rows.</action>
   <action>If Review Gate table has extra rows beyond the 6 valid ones: remove the invalid rows</action>
   <action>Parse each row: Review name, Status (PENDING | PASSED | FAILED), Report link</action>
+
+  <!-- Infra Gate Detection (FR-129): per-story gate type selection based on requirement ID prefix -->
+  <action>Read the story file's YAML frontmatter traces_to field (e.g., traces_to: [IR-001, FR-128])</action>
+  <action>Determine gate_type for this individual story by scanning its traces_to entries:
+    - If ANY entry has an IR-, OR-, or SR- prefix → set gate_type = "infra"
+    - If entries have only FR- or NFR- prefixes (or traces_to is empty/absent) → set gate_type = "standard"
+    Each story is evaluated independently — in platform projects with mixed stories, each story gets the gate set matching its own requirement prefix, not a single gate set for the whole project.</action>
+  <action if="gate_type == infra">Log: "Infra review gates detected for this story (traces to IR-/OR-/SR- requirements). Applying infrastructure gate criteria: QA Tests → Policy-as-Code Validation, Test Automation → Plan Validation + Drift Checks, Performance Review → Cost Review + Scaling Validation, Test Review → Policy Review. Code Review and Security Review remain unchanged."</action>
 </step>
+
 <step n="2" title="Evaluate Gate and Transition">
   <critical>
     <mandate>You MUST execute the transition even if the gate was already fully passed before this run. The purpose is to ensure story status matches gate state.</mandate>
-    <mandate>Do NOT write to sprint-status.yaml from review workflows. Story file frontmatter is the source of truth. Sprint status is synced separately via /kratos-sprint-status.</mandate>
+    <mandate>Use the status-sync protocol to update story status — this ensures story file, sprint-status.yaml, and story-index.yaml stay in sync.</mandate>
   </critical>
   <action>Check two things: (1) the Review Gate table rows, (2) the current story status</action>
   <action>If ALL 6 rows show PASSED AND story status is 'review': read the "Definition of Done" section — verify every item is checked (- [x]). If any item is unchecked: log "BLOCKED: DoD incomplete — {unchecked items}". Do NOT transition to done.</action>
-  <action>If ALL 6 rows show PASSED AND all DoD items checked AND story status is 'review': change story status to 'done' in story file frontmatter ONLY. Do NOT write to sprint-status.yaml.</action>
+  <action>If ALL 6 rows show PASSED AND all DoD items checked AND story status is 'review':
+    <invoke-protocol ref="status-sync" story_key="{story_key}" new_status="done" source_workflow="review-gate-check" />
+  </action>
   <action>If ALL 6 rows show PASSED AND the story status is already 'done': log "Story already done. No update needed."</action>
   <action>If any row is FAILED: log which reviews failed. Do not change story status.</action>
   <action>If any row is PENDING: log which reviews are still pending. Do not change story status.</action>

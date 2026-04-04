@@ -1,6 +1,6 @@
 # Kratos Framework v1.27.57
 
-This project uses the **KRATOS** (Generative Agile Intelligence Architecture) framework — an AI agent framework for Claude Code that orchestrates software product development through 15 operational agents, 64 workflows, and 8 shared skills. KRATOS is the lightweight edition of [GAIA](https://github.com/jlouage/Gaia-framework) (25 agents) — optimized for fast, low-token-cost workflows. GitHub Copilot support is provided separately through `.github/copilot-instructions.md` because Copilot does not consume Claude slash-command frontmatter.
+This project uses the **KRATOS** (Generative Agile Intelligence Architecture) framework — an AI agent framework for Claude Code that orchestrates software product development through 15 operational agents, 71 workflows, and 8 shared skills. KRATOS is the lightweight edition of [GAIA](https://github.com/jlouage/Gaia-framework) (25 agents) — optimized for fast, low-token-cost workflows. GitHub Copilot support is provided separately through `.github/copilot-instructions.md` because Copilot does not consume Claude slash-command frontmatter.
 
 ## How to Start
 
@@ -47,7 +47,7 @@ _kratos/                    # Framework root
 ### Config Resolution
 1. Check for pre-resolved config in `_kratos/{module}/.resolved/{workflow}.yaml`
 2. If not found: load `workflow.yaml` → module `config.yaml` (which inherits `global.yaml`)
-3. Resolve `{project-root}`, `{installed_path}`, system-generated values
+3. Resolve `{project-root}`, `{project-path}`, `{memory_path}`, `{checkpoint_path}`, `{installed_path}`, system-generated values
 4. After any config change, run `/kratos-build-configs` to regenerate resolved configs
 5. Do not assume `.resolved/` exists in every checkout — fallback resolution must remain valid
 
@@ -91,9 +91,9 @@ _kratos/                    # Framework root
 
 ### Sprint-Status Write Safety
 - **Story file is source of truth** — sprint-status.yaml is a derived/cached view
-- **Review workflows (6)** MUST NOT write to sprint-status.yaml — update only the story file
-- **All other workflows** MUST re-read sprint-status.yaml immediately before writing
-- Running `/kratos-sprint-status` reconciles sprint-status.yaml with story files
+- **All status transitions** MUST use the `status-sync` protocol (`_kratos/core/protocols/status-sync.xml`) — this updates the story file, sprint-status.yaml, and story-index.yaml atomically
+- **Review workflows (6)** update only the Review Gate table — the `review-gate-check` protocol handles the `review → done` transition via status-sync
+- Running `/kratos-sprint-status` reconciles sprint-status.yaml with story files (catches any remaining drift)
 
 ## Naming Conventions
 
@@ -128,6 +128,47 @@ backlog → validating → ready-for-dev → in-progress → blocked → review 
 Run `/kratos-run-all-reviews` to execute all six reviews sequentially via subagents — one command instead of six.
 
 If any review fails, the story remains in `review` until the failed reviews are fixed and re-run. The Review Gate table in the story file tracks progress.
+
+Use `/kratos-check-review-gate` to inspect gate status without re-running reviews. Use `/kratos-check-dod` to validate Definition of Done before submitting for review. Use `/kratos-action-items` to process and resolve action items from retros, triage, and tech-debt reviews.
+
+### Additional Workflows
+
+- `/kratos-edit-architecture` — Edit an existing architecture document (phase 3, solutioning)
+- `/kratos-edit-ux-design` — Edit an existing UX design document (phase 2, planning)
+- `/kratos-validate-prd` — Validate a PRD against standards (phase 2, planning)
+- `/kratos-advanced-elicitation` — Deep requirements elicitation using structured questioning techniques (phase 1, analysis)
+
+### Infra Review Gate Substitutions
+
+For infrastructure stories (those whose `traces_to` field contains `IR-###`, `OR-###`, or `SR-###` requirement IDs), 4 of the 6 review gates use adapted criteria. Code Review and Security Review remain unchanged for all story types.
+
+| Standard Gate | Infra Equivalent | Change |
+|---|---|---|
+| Code Review | IaC Code Review | Unchanged — same workflow, IaC expertise expected |
+| QA Tests | Policy-as-Code Validation | Checkov/tfsec/OPA pass replaces unit/integration test pass |
+| Security Review | Security Review | Unchanged — critical for infrastructure |
+| Test Automation | Plan Validation + Drift Checks | terraform plan assertions replace automated test coverage |
+| Test Review | Policy Review | OPA/Rego coverage replaces test quality review |
+| Performance Review | Cost Review + Scaling Validation | Cost analysis and autoscaling validation replace load testing |
+
+**Detection mechanism:** The `review-gate-check` protocol reads the story's `traces_to` field and checks the requirement ID prefix. Each story is evaluated independently — platform projects with mixed stories get per-story gate selection based on their own requirement prefix.
+
+## Project Path
+
+KRATOS supports separating the framework from the application source code. The `project_path` setting in `global.yaml` controls where application code lives:
+
+- `project_path: "."` (default) — project code lives at the root alongside `_kratos/`. This is backward compatible.
+- `project_path: "my-app"` — project code lives in a subdirectory. KRATOS framework stays at root, code goes in `my-app/`.
+
+**Resolved variables:**
+- `{project-root}` — always the root directory where `_kratos/` lives. Used for framework paths, docs, and artifacts.
+- `{project-path}` — where application source code lives. Equals `{project-root}` if project_path is `"."`, otherwise `{project-root}/{project_path}`.
+
+**Rules:**
+- Dev agents MUST write application code to `{project-path}`, not `{project-root}`
+- Brownfield onboarding scans `{project-path}` for codebase discovery
+- Framework artifacts (docs/, _kratos/) always stay at `{project-root}`
+- Commands like `npm install`, `git`, test runners use `{project-path}` as working directory
 
 ## Memory Hygiene
 

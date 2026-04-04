@@ -1479,7 +1479,8 @@ const COMMAND_REGISTRY: CmdEntry[] = [
   { cmd: 'context budget',         desc: 'Check agent context fits 40K token budget',       group: 'context',   tags: ['budget','tokens','limit'] },
   { cmd: 'context skill-sections', desc: 'List skill sections for JIT loading',             group: 'context',   tags: ['skills','sections','jit'] },
   // agent
-  { cmd: 'agent list',             desc: 'List all 17 available Kratos agents',             group: 'agent',     tags: ['list','agents','show'] },
+  { cmd: 'agent list',             desc: 'List all available Kratos agents',                group: 'agent',     tags: ['list','agents','show'] },
+  { cmd: 'agent <name>',           desc: 'Shorthand to start a session as an agent',        group: 'agent',     tags: ['agent','run','start','session','chat','interactive'] },
   { cmd: 'agent info <name>',      desc: 'Show details for a specific agent',               group: 'agent',     tags: ['info','details','inspect'] },
   { cmd: 'agent run <name>',       desc: 'Start an interactive Claude session as an agent', group: 'agent',     tags: ['run','start','session','chat','interactive'] },
 ];
@@ -1520,6 +1521,91 @@ const NEXT_STEPS: Record<string, string[]> = {
 const COMMAND_GROUPS = ['memory','learn','sprint','providers','cost','validate',
                         'hooks','metrics','codebase','plugins','context','agent'];
 
+function normalizeRegistryCommand(cmd: string): string {
+  return cmd.replace(/ <[^>]+>/g, '').replace(/ \[[^\]]+\]/g, '').trim().toLowerCase();
+}
+
+function createAgentAutocompleteEntries(): CmdEntry[] {
+  try {
+    return listAgents(KRATOS_ROOT).flatMap(agentEntry => {
+      const aliases = Array.from(new Set(
+        [agentEntry.name, agentEntry.displayName]
+          .map(value => value.trim())
+          .filter(Boolean)
+      ));
+      const sharedTags = Array.from(new Set([
+        'agent',
+        'persona',
+        'session',
+        'run',
+        'info',
+        agentEntry.name.toLowerCase(),
+        agentEntry.displayName.toLowerCase(),
+        agentEntry.module.toLowerCase(),
+      ]));
+
+      return aliases.flatMap(alias => [
+        {
+          cmd: `agent ${alias}`,
+          desc: `Start a session as ${agentEntry.icon} ${agentEntry.displayName} — ${agentEntry.title}`,
+          group: 'agent',
+          tags: [...sharedTags, 'start', 'chat', 'interactive'],
+        },
+        {
+          cmd: `agent run ${alias}`,
+          desc: `Start a session as ${agentEntry.icon} ${agentEntry.displayName} — ${agentEntry.title}`,
+          group: 'agent',
+          tags: [...sharedTags, 'start', 'chat', 'interactive'],
+        },
+        {
+          cmd: `agent info ${alias}`,
+          desc: `Show details for ${agentEntry.icon} ${agentEntry.displayName} — ${agentEntry.title}`,
+          group: 'agent',
+          tags: [...sharedTags, 'details', 'inspect'],
+        },
+      ]);
+    });
+  } catch {
+    return [];
+  }
+}
+
+const AGENT_AUTOCOMPLETE_ENTRIES = createAgentAutocompleteEntries();
+
+function getCompletionRegistryForInput(input: string): CmdEntry[] {
+  const lower = input.trim().toLowerCase();
+  return lower === 'agent' || lower.startsWith('agent ')
+    ? [...AGENT_AUTOCOMPLETE_ENTRIES, ...COMMAND_REGISTRY]
+    : [...COMMAND_REGISTRY, ...AGENT_AUTOCOMPLETE_ENTRIES];
+}
+
+export function getReplCompletions(line: string): string[] {
+  const lower = line.toLowerCase().trim();
+  if (!lower) {
+    const groups = COMMAND_GROUPS;
+    const roots = COMMAND_REGISTRY.filter(e => e.group === 'root').map(e => e.cmd);
+    return [...groups, ...roots];
+  }
+
+  const registry = getCompletionRegistryForInput(line);
+  const hits = registry.filter(e => e.cmd.toLowerCase().startsWith(lower));
+  if (hits.length > 0) {
+    const preferredHits = hits.some(e => !/[<[]/.test(e.cmd))
+      ? hits.filter(e => !/[<[]/.test(e.cmd))
+      : hits;
+    return Array.from(new Set(preferredHits.map(e => e.cmd)));
+  }
+
+  const tagHits = registry.filter(e =>
+    e.tags.some(tag => {
+      const normalizedTag = tag.toLowerCase();
+      return normalizedTag.startsWith(lower) || normalizedTag.includes(lower);
+    }) || e.desc.toLowerCase().includes(lower)
+  );
+
+  return Array.from(new Set(tagHits.map(e => e.cmd)));
+}
+
 // ── Levenshtein distance for fuzzy matching ──────────────────
 function levenshtein(a: string, b: string): number {
   const m = a.length, n = b.length;
@@ -1535,11 +1621,26 @@ function levenshtein(a: string, b: string): number {
 }
 
 function fuzzyFind(input: string): CmdEntry[] {
-  return COMMAND_REGISTRY
-    .map(e => ({ entry: e, dist: levenshtein(input, e.cmd.split(' ')[0]) }))
-    .filter(x => x.dist <= 3)
-    .sort((a, b) => a.dist - b.dist)
+  const lower = input.trim().toLowerCase();
+  const registry = getCompletionRegistryForInput(input);
+
+  return registry
+    .map(entry => {
+      const normalizedCmd = normalizeRegistryCommand(entry.cmd);
+      const tagDistance = entry.tags.length > 0
+        ? Math.min(...entry.tags.map(tag => levenshtein(lower, tag.toLowerCase())))
+        : Number.POSITIVE_INFINITY;
+      const dist = Math.min(levenshtein(lower, normalizedCmd), tagDistance);
+      return { entry, dist };
+    })
+    .filter(({ entry, dist }) =>
+      dist <= Math.max(3, Math.floor(lower.length / 3)) ||
+      normalizeRegistryCommand(entry.cmd).includes(lower) ||
+      entry.desc.toLowerCase().includes(lower)
+    )
+    .sort((a, b) => a.dist - b.dist || a.entry.cmd.length - b.entry.cmd.length)
     .map(x => x.entry)
+    .filter((entry, index, all) => all.findIndex(candidate => candidate.cmd === entry.cmd) === index)
     .slice(0, 4);
 }
 
@@ -1555,9 +1656,11 @@ function paintGhost(rl: readline.Interface, currentLine: string): void {
   if (!process.stdout.isTTY) return;
   const lower = currentLine.toLowerCase();
   if (lower.length < 2) return;
-  const hit = COMMAND_REGISTRY.find(e => e.cmd.startsWith(lower) && e.cmd !== lower);
+  const hit = getReplCompletions(currentLine).find(cmd =>
+    cmd.toLowerCase().startsWith(lower) && cmd.toLowerCase() !== lower
+  );
   if (!hit) return;
-  const ghost = hit.cmd.slice(currentLine.length);
+  const ghost = hit.slice(currentLine.length);
   if (!ghost) return;
   // save cursor → dim ghost text → restore cursor
   process.stdout.write(`${ESC}7${ESC}[2m${ghost}${ESC}[0m${ESC}8`);
@@ -1604,18 +1707,7 @@ async function startRepl(isRestart = false): Promise<void> {
   process.stdin.removeAllListeners('keypress');
 
   const completer = (line: string): [string[], string] => {
-    const lower = line.toLowerCase().trim();
-    if (!lower) {
-      const groups = COMMAND_GROUPS;
-      const roots = COMMAND_REGISTRY.filter(e => e.group === 'root').map(e => e.cmd);
-      return [[...groups, ...roots], line];
-    }
-    const hits = COMMAND_REGISTRY.filter(e => e.cmd.startsWith(lower));
-    if (hits.length > 0) return [hits.map(e => e.cmd), line];
-    const tagHits = COMMAND_REGISTRY.filter(e =>
-      e.tags.some(t => t.startsWith(lower)) || e.desc.toLowerCase().includes(lower)
-    );
-    return [tagHits.map(e => e.cmd), line];
+    return [getReplCompletions(line), line];
   };
 
   const rl: readline.Interface = readline.createInterface({
@@ -1627,7 +1719,11 @@ async function startRepl(isRestart = false): Promise<void> {
 
   // Set up keypress-based inline ghost text
   if (process.stdout.isTTY) {
-    readline.emitKeypressEvents(process.stdin, rl);
+    // Guard: only call emitKeypressEvents once per process to prevent
+    // duplicate internal keypress listeners that cause doubled characters.
+    if (!(process.stdin as NodeJS.ReadStream & { _keypressDecoder?: unknown })._keypressDecoder) {
+      readline.emitKeypressEvents(process.stdin, rl);
+    }
 
     process.stdin.on('keypress', (_ch: string | undefined, key: readline.Key | undefined) => {
       // Clear existing ghost on any destructive key
@@ -1693,9 +1789,10 @@ async function startRepl(isRestart = false): Promise<void> {
     }
 
     // ── unknown command? fuzzy "did you mean?" ──
-    const knownCmd = COMMAND_REGISTRY.some(e => {
-      const normalized = e.cmd.replace(/ <[^>]+>/g, '').replace(/ \[[^\]]+\]/g, '');
-      return input === normalized || input.startsWith(normalized + ' ');
+    const normalizedInput = input.toLowerCase();
+    const knownCmd = getCompletionRegistryForInput(input).some(e => {
+      const normalized = normalizeRegistryCommand(e.cmd);
+      return normalizedInput === normalized || normalizedInput.startsWith(normalized + ' ');
     });
 
     if (!knownCmd) {
@@ -1715,11 +1812,14 @@ async function startRepl(isRestart = false): Promise<void> {
       return;
     }
 
-    // ── agent run <name> — run inline to avoid dual-readline rendering artifacts ──
+    // ── agent sessions — run inline to avoid dual-readline rendering artifacts ──
     const args = input.split(/\s+/);
-    if (args[0] === 'agent' && args[1] === 'run' && args[2]) {
-      const agentName = args[2];
-      const modelTier = (args[3] as 'fast' | 'standard' | 'deep') || undefined;
+    const isAgentShortcut = args[0] === 'agent' && !!args[1] && !['list', 'info', 'run'].includes(args[1]);
+    const isAgentRun = args[0] === 'agent' && args[1] === 'run' && !!args[2];
+
+    if (isAgentShortcut || isAgentRun) {
+      const agentName = isAgentRun ? args[2] : args[1];
+      const modelTier = (isAgentRun ? args[3] : args[2]) as 'fast' | 'standard' | 'deep' | undefined;
       // Close this REPL's readline so it doesn't conflict with the agent session
       rl.removeAllListeners('close');
       rl.removeAllListeners('SIGINT');
@@ -1744,10 +1844,10 @@ async function startRepl(isRestart = false): Promise<void> {
     child.on('close', () => {
       // Resolve the matched command (strip arguments) for next-step suggestions
       const resolvedCmd = COMMAND_REGISTRY.find(e => {
-        const base = e.cmd.replace(/ <[^>]+>/g,'').replace(/ \[[^\]]+\]/g,'');
-        return input === base || input.startsWith(base + ' ');
-      })?.cmd.replace(/ <[^>]+>/g,'').replace(/ \[[^\]]+\]/g,'');
-      if (resolvedCmd) showNextSteps(resolvedCmd);
+        const base = normalizeRegistryCommand(e.cmd);
+        return normalizedInput === base || normalizedInput.startsWith(base + ' ');
+      })?.cmd;
+      if (resolvedCmd) showNextSteps(normalizeRegistryCommand(resolvedCmd));
       rl.resume();
       rl.prompt();
     });
@@ -1775,10 +1875,12 @@ async function startRepl(isRestart = false): Promise<void> {
   });
 }
 
-if (process.argv.length > 2) {
-  // Arguments supplied — one-shot command, exit when done (original behaviour)
-  ui.init().then(() => program.parseAsync(process.argv));
-} else {
-  // No arguments — enter interactive REPL
-  startRepl();
+if (require.main === module) {
+  if (process.argv.length > 2) {
+    // Arguments supplied — one-shot command, exit when done (original behaviour)
+    ui.init().then(() => program.parseAsync(process.argv));
+  } else {
+    // No arguments — enter interactive REPL
+    startRepl();
+  }
 }

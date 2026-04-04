@@ -1,0 +1,27 @@
+name: edit-ux-design
+description: 'Edit an existing UX design document'
+module: lifecycle
+agent: ux-designer
+val_validate_output: true
+config_resolved: "{installed_path}/.resolved/edit-ux-design.yaml"
+config_source: "{project-root}/_kratos/lifecycle/config.yaml"
+installed_path: "{project-root}/_kratos/lifecycle/workflows/2-planning/edit-ux-design"
+instructions: "{installed_path}/instructions.xml"
+validation: "{installed_path}/checklist.md"
+input_file_patterns:
+  ux_design:
+    whole: "{planning_artifacts}/ux-design.md"
+    load_strategy: "FULL_LOAD"
+  architecture:
+    whole: "{planning_artifacts}/architecture.md"
+    load_strategy: "SELECTIVE_LOAD"
+quality_gates:
+  pre_start:
+    - check: "ux_design_exists"
+      on_fail: "HALT: No ux-design.md found. Run /kratos-create-ux first."
+on_error:
+  missing_file: "ask_user"
+  unresolved_variable: "halt"
+
+output:
+  primary: "{planning_artifacts}/ux-design.md"

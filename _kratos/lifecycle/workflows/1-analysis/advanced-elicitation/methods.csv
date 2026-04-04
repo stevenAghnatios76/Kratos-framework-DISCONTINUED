@@ -1,0 +1,9 @@
+method,description,best_for,question_count
+"5 Whys","Ask 'why' repeatedly to find root cause","Understanding motivations and root problems",5
+"Socratic Method","Guided questioning to challenge assumptions","Validating requirements and uncovering gaps",8
+"User Story Mapping","Map user journey end-to-end","Understanding workflows and user needs",10
+"MoSCoW Prioritization","Must/Should/Could/Won't classification","Prioritizing features and requirements",6
+"Kano Model","Categorize features by satisfaction impact","Feature prioritization and delight factors",8
+"Jobs-to-be-Done","What job is the user hiring this product for","Understanding true user motivations",7
+"Assumption Mapping","List and validate all assumptions","Risk identification and validation planning",6
+"Stakeholder Mapping","Identify all stakeholders and their needs","Ensuring comprehensive requirements coverage",5

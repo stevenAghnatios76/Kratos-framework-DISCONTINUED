@@ -527,7 +527,6 @@ export async function startSession(
         const args: string[] = [
           '-p', userText,
           '--output-format', 'stream-json',
-          '--verbose',
           '--append-system-prompt', systemPrompt,
         ];
 
@@ -585,7 +584,18 @@ export async function startSession(
                 appendText(evt.result);
               }
             } catch {
-              if (trimmed && !trimmed.startsWith('{')) {
+              // Only output lines that are clearly user-facing text, not
+              // system-reminder tags, skill content, JSON fragments, or
+              // internal Claude CLI chatter.
+              if (
+                trimmed &&
+                !trimmed.startsWith('{') &&
+                !trimmed.startsWith('<') &&
+                !trimmed.includes('system-reminder') &&
+                !trimmed.includes('EXTREMELY_IMPORTANT') &&
+                !trimmed.includes('skill tool') &&
+                !trimmed.includes('ToolSearch')
+              ) {
                 appendText(trimmed);
               }
             }

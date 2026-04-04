@@ -1,0 +1,66 @@
+<workflow name="edit-ux-design">
+<critical>
+  <mandate>Preserve existing content not being changed — no silent drops, reorders, or modifications</mandate>
+  <mandate>Add version note documenting what changed and why</mandate>
+  <mandate>Update "Review Findings Incorporated" section after adversarial review</mandate>
+</critical>
+<step n="1" title="Load Existing UX Design">
+  <action>Read {planning_artifacts}/ux-design.md in full</action>
+  <action>Identify existing sections: personas, information architecture, wireframes, interaction patterns, accessibility</action>
+  <action>Identify existing Version History entries — note last version for auto-increment</action>
+  <action>Display current structure summary to user: section headers, persona count, wireframe count, current version</action>
+</step>
+<step n="2" title="Identify Changes">
+  <ask>What sections need to change?</ask>
+  <ask>Why are these changes needed?</ask>
+  <ask>Is this linked to a change request? If so, provide the CR ID.</ask>
+  <action>Classify change scope: MINOR (section update, text change) / SIGNIFICANT (new persona, new flow, navigation restructure) / BREAKING (complete redesign of major section)</action>
+  <action>Confirm scope of changes before proceeding</action>
+</step>
+<step n="3" title="Apply Edits">
+  <action>For each affected section: present current content, propose edits, wait for user confirmation or modification</action>
+  <action>Preserve all unchanged sections exactly as-is — no reordering, no reformatting, no content loss</action>
+  <action>Validate consistency between edited sections and remaining unchanged sections</action>
+  <action>If edits affect FR-to-Screen Mapping: verify traceability remains accurate</action>
+</step>
+<step n="4" title="Add Version Note">
+  <action>Append a new row to the Version History table:
+    | {date} | {change summary} | {driver} | {CR ID or reference} |
+  </action>
+  <action>If no Version History section exists, create one:
+    ## Version History
+    | Date | Change | Reason | CR/Reference |
+    |------|--------|--------|-------------|
+    | {date} | {change summary} | {driver} | {CR ID or reference} |
+  </action>
+</step>
+<step n="5" title="Save Updated UX Design">
+  <action>Generate a diff summary showing exactly what changed</action>
+  <template-output file="{planning_artifacts}/ux-design.md">
+    Save updated UX design document with all edits applied, unchanged sections preserved, and version note added.
+  </template-output>
+</step>
+<step n="6" title="Adversarial Review">
+  <ask>The UX design has been updated. Would you like to run an adversarial review? This spawns a subagent in a separate context — recommended for significant changes. (yes / skip for minor edits)</ask>
+  <action>If yes: spawn a subagent using the Agent tool: "Load {project-root}/_kratos/core/tasks/review-adversarial.xml. Read its entire contents. Target: {planning_artifacts}/ux-design.md. Target label: ux-design. Follow the task instructions EXACTLY."</action>
+  <action>If skip: proceed to step 7 — mark "Review Findings Incorporated" as "Incremental edit — adversarial review skipped (minor change)"</action>
+  <action>If ok: wait for user to confirm adversarial-review-ux-design-{date}.md exists</action>
+</step>
+<step n="7" title="Incorporate Review Findings" optional="true" condition="adversarial_completed">
+  <action>Read {planning_artifacts}/adversarial-review-ux-design-{date}.md — extract critical and high severity findings</action>
+  <action>For each critical/high finding: incorporate into UX design document</action>
+  <action>Update the "Review Findings Incorporated" section — append new entries with amendment date</action>
+  <template-output file="{planning_artifacts}/ux-design.md">
+    Update the UX design with adversarial review findings incorporated. Append to existing "Review Findings Incorporated" section with amendment date.
+  </template-output>
+</step>
+<step n="8" title="Cascade Impact Check">
+  <action>Read {planning_artifacts}/architecture.md section headers</action>
+  <action>Compare UX design changes against architecture and downstream artifacts</action>
+  <action>Classify cascade impact:</action>
+  <action>  NONE: UX-only changes — architecture and stories unaffected</action>
+  <action>  MINOR: architecture needs a section update — recommend /kratos-edit-arch</action>
+  <action>  SIGNIFICANT: new components or interaction patterns affecting architecture — recommend /kratos-edit-arch with adversarial review, then /kratos-add-stories</action>
+  <action>Report cascade assessment to user with recommended next command(s)</action>
+</step>
+</workflow>

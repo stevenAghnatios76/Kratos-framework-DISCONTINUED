@@ -1,0 +1,121 @@
+<workflow name="action-items">
+<critical>
+  <mandate>Action items are pre-sprint work — resolve BEFORE sprint planning, not during sprints</mandate>
+  <mandate>Route each item to the correct agent based on type: clarification→assignee agent, implementation→SM, process→user, automation→SM</mandate>
+  <mandate>Every resolution must include reasoning — no silent closures</mandate>
+  <mandate>Items open for 3+ sprints auto-escalate from MEDIUM → HIGH</mandate>
+</critical>
+<step n="1" title="Load and Display">
+  <action>Read {implementation_artifacts}/action-items.yaml</action>
+  <action>If file doesn't exist: display "No action items tracked yet. Action items are created by /kratos-retro, /kratos-triage-findings, /kratos-tech-debt-review, and /kratos-correct-course." and STOP.</action>
+  <action>Filter to open and in-progress items only (skip done/invalid/deferred)</action>
+  <action>Apply escalation: items open for 3+ sprints → auto-escalate MEDIUM → HIGH. Items open for 5+ sprints → flag for mandatory user review.</action>
+  <action>If a specific action_id was provided (e.g., /kratos action A-001): filter to that single item</action>
+  <action>If "status" keyword was provided: display dashboard and STOP (don't process):
+
+    === Action Items Dashboard ===
+
+    | Status | Count |
+    |--------|-------|
+    | Open | {open_count} |
+    | In Progress | {in_progress_count} |
+    | Done | {done_count} |
+    | Invalid | {invalid_count} |
+    | Deferred | {deferred_count} |
+
+    Open Items by Priority:
+    | ID | Title | Type | Priority | Age (sprints) | Source | Assignee |
+    {for each open item, sorted by priority then age}
+
+    Aged Items (2+ sprints):
+    {list of items open for 2+ sprints with escalation warnings}
+  </action>
+  <action>Display all open items grouped by priority (HIGH first):
+
+    === Action Items: {open_count} open ===
+
+    | # | ID | Title | Type | Priority | Age | Assignee |
+    {for each open item}
+
+    Processing {count} items...</action>
+</step>
+<step n="2" title="Process Each Item">
+  <action>For each open item (highest priority first, then oldest first):
+
+    Display: "=== {item.id}: {item.title} ==="
+    Show: type, priority, source, escalation_count, related_stories, original context from source_ref
+
+    Route based on type:
+
+    **clarification:**
+      If assignee is an agent:
+        Spawn the assignee agent as a subagent with this prompt:
+        "You are {assignee}. An action item needs your decision:
+        Title: {title}
+        Context: {original context from source_ref}
+        Related stories: {related_stories}
+        This has been open for {escalation_count} sprints.
+        Make a decision: [resolve] with reasoning, [create-story] if implementation needed, or [defer] with justification."
+        Wait for agent to return with decision.
+      If no assignee: ask user who should decide.
+
+    **implementation:**
+      Spawn SM as a subagent:
+      "You are the Scrum Master. An action item needs implementation:
+      Title: {title}
+      Context: {original context}
+      Related stories: {related_stories}
+      Decide: [create-story] create a new story for this work, [add-to-existing] add to an existing backlog story, or [already-done] if this was addressed by completed stories."
+      Wait for SM to return with decision.
+      If create-story: spawn /kratos-create-story subagent with the context.
+      If add-to-existing: update the target story's tasks.
+
+    **process:**
+      Present to user directly:
+      "This action item recommends a process change:
+      {title}
+      Context: {original context}
+      Options: [approve] implement the change, [dismiss] not needed, [defer] address later"
+      Wait for user decision.
+
+    **automation:**
+      Route to SM to create an implementation story (same as implementation type).
+
+    In YOLO mode: auto-apply agent/SM recommendations without user confirmation.</action>
+</step>
+<step n="3" title="Update Tracker">
+  <action>For each processed item, update action-items.yaml:
+    - status: done | invalid | deferred | in-progress (based on decision)
+    - resolution: reasoning from the deciding agent/user
+    - resolved_date: current date (for done/invalid)
+    - related_stories: add any newly created story keys
+    - Update last_updated timestamp</action>
+  <action>Save updated action-items.yaml</action>
+</step>
+<step n="4" title="Summary Report">
+  <action>Display on-screen report (NOT as a file):
+
+    === Action Items Report ===
+
+    Processed: {processed_count}
+    Resolved: {done_count}
+    Invalid: {invalid_count}
+    Deferred: {deferred_count}
+    In Progress: {in_progress_count} (stories created, awaiting sprint)
+    Remaining: {open_count} (not yet processed)
+
+    | ID | Title | Decision | Reasoning |
+    {for each processed item: id, title, new status, brief resolution}
+
+    {if in_progress_count > 0:}
+    Stories created from action items:
+    {list of new story keys with titles}
+    These will be available in the next /kratos-sprint-plan.
+
+    {if open_count > 0:}
+    {open_count} items remain open. Run /kratos-action-items to continue processing.
+
+    {if all resolved:}
+    All action items resolved. Ready for /kratos-sprint-plan.</action>
+</step>
+</workflow>

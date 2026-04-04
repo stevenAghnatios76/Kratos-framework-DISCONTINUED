@@ -81,3 +81,73 @@ used_by: ['create-prd']
 ## 12. Open Questions
 
 - [ ] {Unresolved question}
+
+<!-- BROWNFIELD-ONLY-START -->
+
+## Gap Analysis Summary
+
+| Category | Critical | High | Medium | Low | Total |
+|----------|----------|------|--------|-----|-------|
+| Config Contradictions | {count} | {count} | {count} | {count} | {count} |
+| Dead Code & Dead State | {count} | {count} | {count} | {count} | {count} |
+| Hard-Coded Business Logic | {count} | {count} | {count} | {count} | {count} |
+| Security Endpoints | {count} | {count} | {count} | {count} | {count} |
+| Runtime Behaviors | {count} | {count} | {count} | {count} | {count} |
+| Documentation Drift | {count} | {count} | {count} | {count} | {count} |
+| Integration Seams | {count} | {count} | {count} | {count} | {count} |
+| **Overall** | **{count}** | **{count}** | **{count}** | **{count}** | **{count}** |
+
+## Gap Analysis by Category
+
+### Config Contradictions (`configuration`)
+
+| ID | Severity | Title | Description | Evidence | Recommendation | Verified By | Confidence |
+|----|----------|-------|-------------|----------|----------------|-------------|------------|
+| — | — | No gaps detected in this category. | — | — | — | — | — |
+
+### Dead Code & Dead State (`functional`)
+
+| ID | Severity | Title | Description | Evidence | Recommendation | Verified By | Confidence |
+|----|----------|-------|-------------|----------|----------------|-------------|------------|
+| — | — | No gaps detected in this category. | — | — | — | — | — |
+
+### Hard-Coded Business Logic (`functional`, `behavioral`)
+
+| ID | Severity | Title | Description | Evidence | Recommendation | Verified By | Confidence |
+|----|----------|-------|-------------|----------|----------------|-------------|------------|
+| — | — | No gaps detected in this category. | — | — | — | — | — |
+
+### Security Endpoints (`security`)
+
+| ID | Severity | Title | Description | Evidence | Recommendation | Verified By | Confidence |
+|----|----------|-------|-------------|----------|----------------|-------------|------------|
+| — | — | No gaps detected in this category. | — | — | — | — | — |
+
+### Runtime Behaviors (`behavioral`, `operational`)
+
+| ID | Severity | Title | Description | Evidence | Recommendation | Verified By | Confidence |
+|----|----------|-------|-------------|----------|----------------|-------------|------------|
+| — | — | No gaps detected in this category. | — | — | — | — | — |
+
+### Documentation Drift (`documentation`)
+
+| ID | Severity | Title | Description | Evidence | Recommendation | Verified By | Confidence |
+|----|----------|-------|-------------|----------|----------------|-------------|------------|
+| — | — | No gaps detected in this category. | — | — | — | — | — |
+
+### Integration Seams (`data-integrity`, `operational`)
+
+| ID | Severity | Title | Description | Evidence | Recommendation | Verified By | Confidence |
+|----|----------|-------|-------------|----------|----------------|-------------|------------|
+| — | — | No gaps detected in this category. | — | — | — | — | — |
+
+### Verified By Legend
+
+| Value | Description |
+|-------|-------------|
+| `machine-detected` | Gap found by automated scan subagent |
+| `adversarial-review-detected` | Gap found during adversarial review |
+| `code-verified` | Gap confirmed by code-verified review step |
+| `human-reported` | Gap reported manually by a human reviewer |
+
+<!-- BROWNFIELD-ONLY-END -->

@@ -1,0 +1,49 @@
+<protocol name="status-sync">
+<purpose>
+Synchronize story status (and optionally sprint_id) between story file (source of truth),
+sprint-status.yaml (derived view), and story-index.yaml (fast lookup index).
+Called by any workflow that changes story status. Ensures all files stay in sync at every transition.
+</purpose>
+
+<input>story_key, new_status, source_workflow, sprint_id (optional — if provided, update sprint_id field in story file; use "null" to clear it when removing a story from a sprint)</input>
+
+<step n="1" title="Update Story File">
+  <action>Read story file at {implementation_artifacts}/{story_key}-*.md</action>
+  <action>Update YAML frontmatter status field to {new_status}</action>
+  <action if="sprint_id parameter is provided">Update YAML frontmatter sprint_id field to {sprint_id}. If sprint_id is "null", set sprint_id to null (clearing the sprint assignment).</action>
+  <action>Scan the story body (below the frontmatter) for a line matching the pattern "**Status:**" (e.g., "> **Status:** backlog"). If found, update the status value on that line to match {new_status}. This prevents frontmatter/body drift.</action>
+  <action>This is the source of truth — always updated first</action>
+</step>
+
+<step n="2" title="Update sprint-status.yaml">
+  <action>Check if {implementation_artifacts}/sprint-status.yaml exists</action>
+  <action if="sprint-status.yaml does not exist">Skip — sprint not yet created. No entry to update.</action>
+  <action if="sprint-status.yaml exists">Re-read sprint-status.yaml immediately before writing (write safety per sprint-status-write-safety.xml)</action>
+  <action if="sprint-status.yaml exists">Check if {story_key} has an entry in sprint-status.yaml</action>
+  <action if="sprint_id is explicitly set to null AND story_key has entry in sprint-status.yaml">Remove the {story_key} entry from sprint-status.yaml — story is no longer in this sprint.</action>
+  <action if="sprint_id is NOT null (or not provided) AND story_key has entry">Update ONLY the status field of the {story_key} entry to {new_status}. Minimal write — do not modify other stories or fields.</action>
+  <action if="story_key has no entry">Skip — story not yet assigned to a sprint. No entry to update.</action>
+  <action>If sprint-status.yaml update fails for any reason: log warning "{source_workflow}: Failed to sync sprint-status.yaml for {story_key} → {new_status}. Run /kratos-sprint-status to reconcile." and continue — this is non-blocking.</action>
+</step>
+
+<step n="3" title="Update story-index.yaml">
+  <action>Read {implementation_artifacts}/story-index.yaml. If the file doesn't exist, create it with header:
+    # Auto-maintained by status-sync protocol. Do not edit manually.
+    last_updated: "{current ISO 8601 timestamp}"
+    stories: {}</action>
+  <action>Check if {story_key} has an entry in the stories map</action>
+  <action if="story_key has entry">Update: status to {new_status}. If sprint_id parameter provided: update sprint_id. Update last_updated timestamp.</action>
+  <action if="story_key has NO entry">Read the story file frontmatter to populate a new entry:
+    {story_key}:
+      title: {from frontmatter title field}
+      epic: {extract epic key from frontmatter epic field, e.g., "E9 — Enhanced Agent Memory" → "E9"}
+      status: {new_status}
+      sprint_id: {from frontmatter or sprint_id parameter}
+      priority: {from frontmatter}
+      risk: {from frontmatter}
+      author: {from frontmatter}
+      file: {story filename, e.g., "E9-S13-consolidate-dual-gaia-and-memory-directories.md"}
+    Update last_updated timestamp.</action>
+  <action>Write back story-index.yaml. Non-blocking — if write fails, log warning and continue. The index is a performance optimization, not a source of truth.</action>
+</step>
+</protocol>

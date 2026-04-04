@@ -15,6 +15,23 @@ user_skill_level: "intermediate"  # beginner | intermediate | expert
 project_name: "GT-AI-Workflows"
 project_root: "{project-root}"
 install_profile: "full"
+# Project path — relative directory within the root where application source code lives.
+# Use "." (default) if the project code lives at the root alongside _kratos/.
+# Use a folder name (e.g., "app", "project", "my-app") if the code lives in a subdirectory.
+# The resolved {project-path} variable expands to the full absolute path.
+project_path: "."
+
+# Val integration — feature gates for inline validation
+val_integration:
+  template_output_review: true   # Show [v] Review with Val at template-output prompts
+  val_validate_output: true      # Enable automatic Val validation when workflow declares val_validate_output: true
+
+# Story sizing — canonical T-shirt-to-points mapping (Fibonacci scale)
+sizing_map:
+  S: 2
+  M: 5
+  L: 8
+  XL: 13
 
 # Output paths
 output_folder: "{project-root}/docs"

@@ -1,0 +1,88 @@
+<workflow name="edit-architecture">
+<critical>
+  <mandate>Preserve existing content not being changed — no silent drops, reorders, or modifications</mandate>
+  <mandate>Record every significant decision as a new ADR with auto-incremented ID</mandate>
+  <mandate>Add version note documenting what changed, why, and the CR/reference</mandate>
+</critical>
+<step n="1" title="Load Existing Architecture">
+  <action>Read {planning_artifacts}/architecture.md in full</action>
+  <action>Count existing ADRs in Section 2 (Architecture Decisions) — note highest ADR ID for auto-increment</action>
+  <action>Identify existing Version History entries — note last version number for auto-increment</action>
+  <action>Display current structure summary to user: section headers, ADR count, current version</action>
+</step>
+<step n="2" title="Capture Change Scope">
+  <check if="triggered_by_change_request">Inherit CR ID, technical_impact, and change_description from the triggering workflow context. Skip user questions — proceed directly to scope confirmation.</check>
+  <check if="triggered_by_adversarial_review">Load adversarial review findings as the change scope. Set driver = "adversarial-review". Skip user questions — proceed directly to scope confirmation.</check>
+  <ask>What sections need to change? (List affected architecture sections)</ask>
+  <ask>What is the change? (Describe the modification)</ask>
+  <ask>Why is this change needed? (Driver: change request / technical discovery / adversarial finding / PRD edit cascade)</ask>
+  <ask>Is this linked to a change request or other reference? If so, provide the CR ID or reference.</ask>
+  <action>Record: sections_affected, change_description, driver, cr_id</action>
+  <action>Classify change scope: MINOR (section update, config change) / SIGNIFICANT (new component, API change, data model change) / BREAKING (architectural shift, tech stack change)</action>
+  <action>Confirm scope of changes with user before proceeding</action>
+</step>
+<step n="3" title="Apply Targeted Edits">
+  <action>For each affected section: present current content, propose edits, wait for user confirmation or modification</action>
+  <action>Preserve all unchanged sections exactly as-is — no reordering, no reformatting, no content loss</action>
+  <action>Validate consistency between edited sections and remaining unchanged sections</action>
+  <action>If edits affect component-to-requirement traceability: verify Addresses fields remain accurate</action>
+</step>
+<step n="4" title="Record ADRs">
+  <action>For each significant decision in the edit: create a new ADR entry</action>
+  <action>Auto-increment ADR ID from highest existing (e.g., if ADR-5 exists, new ADR is ADR-6)</action>
+  <action>ADR template:
+    ### ADR-{id}: {Decision Title}
+    - **Status:** Active
+    - **Context:** {Why this decision was needed}
+    - **Decision:** {What was decided}
+    - **Consequences:** {Trade-offs and implications}
+    - **Addresses:** {FR-* / NFR-* IDs this decision addresses}
+  </action>
+  <action>If superseding an existing ADR: set old ADR status to "Superseded by ADR-{new_id}" and add "Supersedes: ADR-{old_id}" to the new entry</action>
+  <action>Auto-increment architecture version: minor bump (e.g., v1.0 → v1.1, v1.3 → v1.4)</action>
+</step>
+<step n="5" title="Add Version Note">
+  <action>Append a new row to the Version History table:
+    | {date} | {change summary} | {driver} | {CR ID or reference} |
+  </action>
+  <action>If no Version History section exists, create one:
+    ## Version History
+    | Date | Change | Reason | CR/Reference |
+    |------|--------|--------|-------------|
+    | {date} | {change summary} | {driver} | {CR ID or reference} |
+  </action>
+</step>
+<step n="6" title="Save and Review Gate">
+  <action>Generate a diff summary showing exactly what changed (sections modified, ADRs added/superseded, version bump)</action>
+  <template-output file="{planning_artifacts}/architecture.md">
+    Save updated architecture document with all edits applied, new ADRs appended, version incremented, and version note added.
+  </template-output>
+  <action>Read {project-root}/_kratos/_config/adversarial-triggers.yaml to evaluate trigger rules. Determine the current change_type: if this workflow was invoked with a change_type context (e.g., from add-feature triage), use that value. If no context is available, infer from the change scope and driver: adversarial-finding or technical-discovery maps to "feature", change-request depends on the CR classification.</action>
+  <action>Look up the trigger rule for change_type + artifact "architecture". If adversarial is false for this combination: skip adversarial review — mark "Review Findings Incorporated" as "Adversarial review not triggered — change type: {change_type} per adversarial-triggers.yaml". If adversarial is true but the rule has a magnitude_threshold and change_scope is below it (e.g., MINOR is below SIGNIFICANT): skip — mark "Review Findings Incorporated" as "Adversarial review not triggered — magnitude {change_scope} below threshold per adversarial-triggers.yaml".</action>
+  <check if="adversarial trigger rule is true AND magnitude meets or exceeds threshold">
+    <action>Adversarial review triggered per adversarial-triggers.yaml: change_type={change_type}, magnitude={change_scope}.</action>
+    <action>Spawn a subagent using the Agent tool: "Load {project-root}/_kratos/core/tasks/review-adversarial.xml. Read its entire contents. Target: {planning_artifacts}/architecture.md. Target label: architecture. Follow the task instructions EXACTLY. Focus review on changed sections: {sections_affected}."</action>
+    <action>When subagent returns: verify adversarial-review-architecture-{date}.md exists.</action>
+    <action>Read findings — extract critical and high severity items.</action>
+    <action>For each critical/high finding: incorporate into architecture document.</action>
+    <action>Update "Review Findings Incorporated" section — append new entries with amendment date.</action>
+    <template-output file="{planning_artifacts}/architecture.md">
+      Update architecture with adversarial review findings incorporated. Append to existing "Review Findings Incorporated" section with amendment date.
+    </template-output>
+  </check>
+</step>
+<step n="7" title="Cascade Impact Analysis">
+  <action>Classify cascade impact on downstream artifacts:</action>
+  <action>
+    | Downstream Artifact    | Impact | Recommended Action |
+    |------------------------|--------|--------------------|
+    | Epics and Stories       | {NONE/MINOR/SIGNIFICANT} | {/kratos-add-stories or manual update} |
+    | Test Plan               | {NONE/MINOR/SIGNIFICANT} | {/kratos-test-design} |
+    | Infrastructure Design   | {NONE/MINOR/SIGNIFICANT} | {/kratos-infra-design or manual update} |
+    | Traceability Matrix     | {NONE/MINOR/SIGNIFICANT} | {/kratos-trace} |
+  </action>
+  <action>For each artifact with impact > NONE: recommend the appropriate update workflow</action>
+  <action>Report cascade assessment to user with recommended next command(s)</action>
+  <action>Record all architecture changes and new ADRs in Theo's memory sidecar: {memory_path}/architect-sidecar/architecture-decisions.md</action>
+</step>
+</workflow>

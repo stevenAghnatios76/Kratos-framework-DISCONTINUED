@@ -1,0 +1,44 @@
+<workflow name="advanced-elicitation">
+<critical>
+  <mandate>Use structured questioning techniques from methods.csv</mandate>
+  <mandate>Document all requirements discovered with clear traceability</mandate>
+  <mandate>Distinguish between stated needs, implied needs, and assumed needs</mandate>
+</critical>
+<step n="1" title="Context Gathering">
+  <action>Load upstream research artifacts if available: project-brainstorm.md, market-research.md, domain-research.md, technical-research.md</action>
+  <action>Summarize what upstream context was found — present key themes, target users, market insights, and technical constraints already discovered</action>
+  <ask>Based on the research so far, what product or feature area do you want to explore deeper? (Or describe from scratch if no prior research exists)</ask>
+  <ask>Who are the key stakeholders?</ask>
+  <ask>Are there specific requirements gaps or assumptions from the research that you want to validate?</ask>
+</step>
+<step n="2" title="Method Selection">
+  <action>Load methods.csv to show available elicitation techniques</action>
+  <action>Present available methods with their descriptions and best-fit scenarios</action>
+  <ask>Which elicitation method(s) would you like to use? (or let me recommend based on your context)</ask>
+  <action>If user defers: recommend 2-3 methods based on the project context</action>
+</step>
+<step n="3" title="Elicitation Execution">
+  <action>For each selected method: execute the structured questioning flow</action>
+  <action>5 Whys: ask "why" iteratively to uncover root motivations</action>
+  <action>Socratic Method: challenge assumptions through guided questions</action>
+  <action>User Story Mapping: walk through the user journey end-to-end</action>
+  <action>MoSCoW: classify each requirement as Must/Should/Could/Won't</action>
+  <action>Kano Model: categorize features by satisfaction impact</action>
+  <action>Jobs-to-be-Done: identify the core job the user is hiring the product for</action>
+  <action>Assumption Mapping: list and validate all project assumptions</action>
+  <action>Stakeholder Mapping: identify all stakeholders and their needs</action>
+  <action>Document all requirements discovered during each method</action>
+</step>
+<step n="4" title="Requirements Synthesis">
+  <action>Consolidate all discovered requirements across methods</action>
+  <action>Remove duplicates and resolve conflicts</action>
+  <action>Categorize as: functional, non-functional, constraint, assumption</action>
+  <action>Tag each requirement with source method and confidence level</action>
+  <action>Identify gaps where further elicitation is needed</action>
+</step>
+<step n="5" title="Generate Output">
+  <template-output file="{planning_artifacts}/elicitation-report-{date}.md">
+    Generate elicitation report with: context summary, methods used, all discovered requirements (categorized), assumptions log, gaps identified, and recommended next steps.
+  </template-output>
+</step>
+</workflow>

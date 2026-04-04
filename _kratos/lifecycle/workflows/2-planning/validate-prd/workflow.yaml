@@ -2,7 +2,7 @@ name: validate-prd
 description: 'Validate a PRD against standards'
 module: lifecycle
 agent: pm
-config_resolved: "{project-root}/_kratos/lifecycle/.resolved/validate-prd.yaml"
+config_resolved: "{installed_path}/.resolved/validate-prd.yaml"
 config_source: "{project-root}/_kratos/lifecycle/config.yaml"
 installed_path: "{project-root}/_kratos/lifecycle/workflows/2-planning/validate-prd"
 instructions: "{installed_path}/instructions.xml"

@@ -1,0 +1,33 @@
+name: edit-architecture
+description: 'Edit an existing architecture document'
+module: lifecycle
+agent: architect
+val_validate_output: true
+config_resolved: "{installed_path}/.resolved/edit-architecture.yaml"
+config_source: "{project-root}/_kratos/lifecycle/config.yaml"
+installed_path: "{project-root}/_kratos/lifecycle/workflows/3-solutioning/edit-architecture"
+instructions: "{installed_path}/instructions.xml"
+validation: "{installed_path}/checklist.md"
+input_file_patterns:
+  architecture:
+    whole: "{planning_artifacts}/architecture.md"
+    load_strategy: "FULL_LOAD"
+  prd:
+    whole: "{planning_artifacts}/prd.md"
+    load_strategy: "SELECTIVE_LOAD"
+  epics_and_stories:
+    whole: "{planning_artifacts}/epics-and-stories.md"
+    load_strategy: "SELECTIVE_LOAD"
+quality_gates:
+  pre_start:
+    - check: "architecture_exists"
+      on_fail: "HALT: No architecture.md found. Run /kratos-create-arch first."
+  post_complete:
+    - check: "cascade_significant"
+      on_fail: "RECOMMEND: Cascade impact is SIGNIFICANT — run /kratos-create-epics to update stories and /kratos-test-design to update test plan."
+on_error:
+  missing_file: "ask_user"
+  unresolved_variable: "halt"
+
+output:
+  primary: "{planning_artifacts}/architecture.md"
