@@ -31,13 +31,57 @@ function loadCredentials(): void {
 
 loadCredentials();
 
-// Resolve project root (walk up until we find _kratos/)
+// Resolve project root (walk up until we find _kratos/, then fall back to likely child projects)
+function scoreProjectCandidate(dir: string): number {
+  let score = 0;
+  const base = path.basename(dir).toLowerCase();
+
+  if (base.includes('framework')) score -= 5;
+  if (base.includes('project') || base.includes('app') || base.includes('service')) score += 4;
+  if (fs.existsSync(path.join(dir, 'commands'))) score += 12;
+  if (fs.existsSync(path.join(dir, '.claude', 'commands'))) score += 4;
+  if (fs.existsSync(path.join(dir, '.github', 'prompts'))) score += 3;
+  if (fs.existsSync(path.join(dir, '_kratos', '_config', 'workflow-manifest.csv'))) score += 5;
+
+  const packageJsonPath = path.join(dir, 'package.json');
+  if (fs.existsSync(packageJsonPath)) {
+    try {
+      const pkg = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8')) as { name?: string };
+      if (pkg.name && pkg.name !== 'kratos-framework') score += 5;
+    } catch {
+      // ignore malformed package.json while scoring
+    }
+  }
+
+  return score;
+}
+
 function findProjectRoot(): string {
+  const override = process.env.KRATOS_PROJECT_ROOT;
+  if (override && fs.existsSync(path.join(override, '_kratos'))) {
+    return path.resolve(override);
+  }
+
   let dir = process.cwd();
   while (dir !== path.dirname(dir)) {
     if (fs.existsSync(path.join(dir, '_kratos'))) return dir;
     dir = path.dirname(dir);
   }
+
+  try {
+    const childCandidates = fs.readdirSync(process.cwd(), { withFileTypes: true })
+      .filter(entry => entry.isDirectory())
+      .map(entry => path.join(process.cwd(), entry.name))
+      .filter(candidate => fs.existsSync(path.join(candidate, '_kratos')))
+      .sort((a, b) => scoreProjectCandidate(b) - scoreProjectCandidate(a) || a.localeCompare(b));
+
+    if (childCandidates.length > 0) {
+      return childCandidates[0];
+    }
+  } catch {
+    // ignore child scan failures and fall back to cwd
+  }
+
   return process.cwd();
 }
 
@@ -45,6 +89,272 @@ const PROJECT_ROOT = findProjectRoot();
 const KRATOS_ROOT = path.join(PROJECT_ROOT, '_kratos');
 const MEMORY_DB_PATH = path.join(KRATOS_ROOT, '_memory', 'memory.db');
 const CHECKPOINT_DIR = path.join(KRATOS_ROOT, '_memory', 'checkpoints');
+const COMMANDS_DIR = path.join(PROJECT_ROOT, 'commands');
+const CLAUDE_COMMANDS_DIR = path.join(PROJECT_ROOT, '.claude', 'commands');
+const COPILOT_PROMPTS_DIR = path.join(PROJECT_ROOT, '.github', 'prompts');
+
+export interface WorkflowEntry {
+  name: string;
+  workflowName: string;
+  description: string;
+  model: string;
+  sourceFile: string;
+  workflowFile?: string;
+  copilotPrompt?: string;
+}
+
+let workflowEntryCache: WorkflowEntry[] | null = null;
+
+function normalizeWorkflowName(value: string): string {
+  return value.trim().toLowerCase().replace(/^\/+/, '').replace(/^kratos-/, '').replace(/^gaia-/, '');
+}
+
+function parseFrontmatterValue(frontmatter: string, key: string): string | undefined {
+  const match = frontmatter.match(new RegExp(`^${key}:\\s*['\"]?(.+?)['\"]?$`, 'im'));
+  return match?.[1]?.trim();
+}
+
+function extractWorkflowConfigPath(body: string): string | undefined {
+  const match = body.match(/Pass\s+\{project-root\}\/([^\s'\"]+workflow\.yaml)/i);
+  return match?.[1]?.replace(/^_gaia\//, '_kratos/');
+}
+
+function resolveRelativeProjectPath(relativePath: string | undefined): string | undefined {
+  if (!relativePath) return undefined;
+
+  const normalized = relativePath.replace(/^\.\//, '');
+  const resolved = path.join(PROJECT_ROOT, normalized);
+  if (fs.existsSync(resolved)) {
+    return path.relative(PROJECT_ROOT, resolved);
+  }
+
+  if (normalized.includes('_gaia')) {
+    const kratosVariant = normalized.replace('_gaia', '_kratos');
+    if (fs.existsSync(path.join(PROJECT_ROOT, kratosVariant))) {
+      return kratosVariant;
+    }
+    return kratosVariant;
+  }
+
+  return normalized;
+}
+
+function resolveCopilotPromptPath(workflowName: string): string | undefined {
+  const normalized = normalizeWorkflowName(workflowName);
+  const candidates = normalized === 'kratos'
+    ? ['kratos.prompt.md']
+    : [`kratos-${normalized}.prompt.md`];
+
+  for (const fileName of candidates) {
+    const fullPath = path.join(COPILOT_PROMPTS_DIR, fileName);
+    if (fs.existsSync(fullPath)) {
+      return path.relative(PROJECT_ROOT, fullPath);
+    }
+  }
+
+  return undefined;
+}
+
+function parseWorkflowEntry(filePath: string): WorkflowEntry | null {
+  const raw = fs.readFileSync(filePath, 'utf-8');
+  const match = raw.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
+  const frontmatter = match?.[1] ?? '';
+  const body = match?.[2] ?? raw;
+  const declaredName = parseFrontmatterValue(frontmatter, 'name')
+    ?? path.basename(filePath, '.md').replace(/^(gaia|kratos)-/, '');
+  const workflowName = normalizeWorkflowName(declaredName);
+
+  if (!workflowName) return null;
+
+  return {
+    name: workflowName,
+    workflowName,
+    description: parseFrontmatterValue(frontmatter, 'description') ?? 'KRATOS workflow',
+    model: parseFrontmatterValue(frontmatter, 'model') ?? 'n/a',
+    sourceFile: path.relative(PROJECT_ROOT, filePath),
+    workflowFile: resolveRelativeProjectPath(extractWorkflowConfigPath(body)),
+    copilotPrompt: resolveCopilotPromptPath(workflowName),
+  };
+}
+
+function parseCsvLine(line: string): string[] {
+  const cells: string[] = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let index = 0; index < line.length; index += 1) {
+    const char = line[index];
+    const next = line[index + 1];
+
+    if (char === '"') {
+      if (inQuotes && next === '"') {
+        current += '"';
+        index += 1;
+      } else {
+        inQuotes = !inQuotes;
+      }
+      continue;
+    }
+
+    if (char === ',' && !inQuotes) {
+      cells.push(current.trim());
+      current = '';
+      continue;
+    }
+
+    current += char;
+  }
+
+  cells.push(current.trim());
+  return cells;
+}
+
+function listManifestWorkflowEntries(): WorkflowEntry[] {
+  const manifestPath = path.join(KRATOS_ROOT, '_config', 'workflow-manifest.csv');
+  if (!fs.existsSync(manifestPath)) return [];
+
+  const lines = fs.readFileSync(manifestPath, 'utf-8')
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(line => line.length > 0 && !line.startsWith('#'));
+
+  const entries: WorkflowEntry[] = [];
+
+  for (const line of lines) {
+    const [workflowId, title, description, , , workflowPath, commandName] = parseCsvLine(line);
+    const workflowName = normalizeWorkflowName(commandName || workflowId || title || '');
+    if (!workflowName) continue;
+
+    entries.push({
+      name: workflowName,
+      workflowName,
+      description: description || title || 'KRATOS workflow',
+      model: 'n/a',
+      sourceFile: path.relative(PROJECT_ROOT, manifestPath),
+      workflowFile: resolveRelativeProjectPath(workflowPath),
+      copilotPrompt: resolveCopilotPromptPath(workflowName),
+    });
+  }
+
+  return entries;
+}
+
+export function listWorkflowEntries(): WorkflowEntry[] {
+  if (workflowEntryCache) return workflowEntryCache;
+
+  const catalogDirs = [COMMANDS_DIR, CLAUDE_COMMANDS_DIR].filter(dir => fs.existsSync(dir));
+
+  const files = catalogDirs
+    .flatMap(dir => fs.readdirSync(dir)
+      .filter(file => /^(gaia|kratos)(?:-.+)?\.md$/i.test(file))
+      .map(file => path.join(dir, file)))
+    .sort();
+
+  const deduped = new Map<string, WorkflowEntry>();
+
+  for (const filePath of files) {
+    const entry = parseWorkflowEntry(filePath);
+    if (!entry) continue;
+
+    const existing = deduped.get(entry.workflowName);
+    const currentIsKratos = path.basename(entry.sourceFile).startsWith('kratos');
+    const existingIsKratos = existing ? path.basename(existing.sourceFile).startsWith('kratos') : false;
+
+    if (!existing || (currentIsKratos && !existingIsKratos)) {
+      deduped.set(entry.workflowName, entry);
+    }
+  }
+
+  for (const entry of listManifestWorkflowEntries()) {
+    if (!deduped.has(entry.workflowName)) {
+      deduped.set(entry.workflowName, entry);
+    }
+  }
+
+  workflowEntryCache = Array.from(deduped.values())
+    .sort((a, b) => a.workflowName.localeCompare(b.workflowName));
+
+  return workflowEntryCache;
+}
+
+export function findWorkflowEntry(name: string): WorkflowEntry | undefined {
+  const normalized = normalizeWorkflowName(name);
+  return listWorkflowEntries().find(entry => entry.workflowName === normalized);
+}
+
+function renderWorkflowTable(entries: WorkflowEntry[]): void {
+  if (entries.length === 0) {
+    ui.info('No workflow commands were discovered.');
+    ui.info('Run this from a KRATOS project folder, or set `KRATOS_PROJECT_ROOT=/path/to/project`.');
+    return;
+  }
+
+  ui.table(
+    ['Workflow', 'Description', 'Model', 'Copilot'],
+    entries.map(entry => [
+      entry.workflowName,
+      entry.description,
+      entry.model,
+      entry.copilotPrompt ? `/${path.basename(entry.copilotPrompt, '.prompt.md')}` : '—',
+    ])
+  );
+}
+
+async function showWorkflowGuidance(
+  workflowName: string,
+  args: string[] = [],
+  opts: { showSource?: boolean } = {}
+): Promise<void> {
+  await ui.init();
+
+  const entry = findWorkflowEntry(workflowName);
+  if (!entry) {
+    ui.error(`Unknown workflow: "${workflowName}"`);
+    ui.info('Run `kratos workflow list` to see the available KRATOS workflows.');
+    process.exit(1);
+  }
+
+  if (entry.workflowName === 'dev-story' && args.length === 0) {
+    ui.error('`kratos dev-story` requires a story key, for example `kratos dev-story E1-S1`.');
+    process.exit(1);
+  }
+
+  ui.heading(`Workflow: ${entry.workflowName}`);
+  ui.keyValue('Description', entry.description);
+  ui.keyValue('Model', entry.model);
+  ui.keyValue('Command source', entry.sourceFile);
+  ui.keyValue('Workflow file', entry.workflowFile ?? '—');
+  ui.keyValue('Copilot command', entry.copilotPrompt ? `/${path.basename(entry.copilotPrompt, '.prompt.md')}` : 'Not installed');
+
+  if (args.length > 0) {
+    ui.keyValue('Arguments', args.join(' '));
+  }
+
+  if (entry.workflowName === 'brownfield') {
+    const targetPath = args[0] ? path.resolve(args[0]) : PROJECT_ROOT;
+    ui.keyValue('Target project', targetPath);
+    ui.callout(
+      'info',
+      'Brownfield scan',
+      'KRATOS will scan the existing codebase, summarize gaps, and generate the planning artifacts needed for onboarding.'
+    );
+  }
+
+  console.log('');
+  ui.subheading('Next Steps');
+  console.log(`    1. ${ui.theme().accent(`kratos workflow open ${entry.workflowName}`)}${ui.theme().dim(' — inspect the full command definition')}`);
+  console.log(`    2. ${ui.theme().accent('kratos agent run Kratos')}${ui.theme().dim(' — start the orchestrator interactively')}`);
+  if (entry.copilotPrompt) {
+    console.log(`    3. ${ui.theme().accent(`/${path.basename(entry.copilotPrompt, '.prompt.md')}`)}${ui.theme().dim(' — run the Copilot-native prompt in VS Code chat')}`);
+  }
+  console.log('');
+
+  if (opts.showSource) {
+    const absolutePath = path.join(PROJECT_ROOT, entry.sourceFile);
+    ui.subheading('Command Definition');
+    ui.raw(fs.readFileSync(absolutePath, 'utf-8'));
+  }
+}
 
 program
   .name('kratos')
@@ -52,15 +362,15 @@ program
   .version('2.2.0')
   .option('--splash', 'Show splash screen')
   .action(async () => {
+    if (program.opts().splash) {
+      await ui.init();
+      await showSplash();
+      return;
+    }
+
     // Called only in single-command mode with no subcommand — show help
     program.outputHelp();
   });
-
-program.on('option:splash', async () => {
-  await ui.init();
-  await showSplash();
-  process.exit(0);
-});
 
 // ============================================================
 // MEMORY COMMANDS
@@ -621,6 +931,97 @@ validate
     }
 
     await mm.close();
+  });
+
+// ============================================================
+// WORKFLOW COMMANDS
+// ============================================================
+const workflow = program.command('workflow').description('Browse KRATOS workflows and entry points');
+
+workflow
+  .command('list')
+  .description('List available KRATOS workflows discovered from the command catalog')
+  .action(async () => {
+    await ui.init();
+    ui.heading('KRATOS Workflow Catalog');
+    renderWorkflowTable(listWorkflowEntries());
+  });
+
+workflow
+  .command('info <name>')
+  .description('Show metadata and next steps for a KRATOS workflow')
+  .action(async (name: string) => {
+    await showWorkflowGuidance(name);
+  });
+
+workflow
+  .command('search <query>')
+  .description('Search KRATOS workflows by name or description')
+  .action(async (query: string) => {
+    await ui.init();
+    const normalized = query.trim().toLowerCase();
+    const matches = listWorkflowEntries().filter(entry =>
+      entry.workflowName.includes(normalized) ||
+      entry.description.toLowerCase().includes(normalized)
+    );
+
+    if (matches.length === 0) {
+      ui.info(`No workflows matched "${query}".`);
+      return;
+    }
+
+    ui.heading(`Workflow Search: ${query}`);
+    renderWorkflowTable(matches);
+  });
+
+workflow
+  .command('open <name>')
+  .description('Print the full command definition for a KRATOS workflow')
+  .action(async (name: string) => {
+    await showWorkflowGuidance(name, [], { showSource: true });
+  });
+
+workflow
+  .command('run <name> [arguments...]')
+  .description('Prepare a named KRATOS workflow for execution from the CLI')
+  .action(async (name: string, arguments_: string[] = []) => {
+    await showWorkflowGuidance(name, arguments_);
+  });
+
+program
+  .command('brownfield [projectPath]')
+  .description('Brownfield onboarding for an existing codebase')
+  .action(async (projectPath?: string) => {
+    await showWorkflowGuidance('brownfield', projectPath ? [projectPath] : []);
+  });
+
+program
+  .command('quick-spec [request...]')
+  .description('Prepare the quick-spec workflow for a small change')
+  .action(async (request: string[] = []) => {
+    await showWorkflowGuidance('quick-spec', request);
+  });
+
+program
+  .command('quick-dev [request...]')
+  .description('Prepare the quick-dev workflow for a scoped implementation')
+  .action(async (request: string[] = []) => {
+    await showWorkflowGuidance('quick-dev', request);
+  });
+
+program
+  .command('dev-story <storyKey> [mode]')
+  .description('Prepare the dev-story workflow for a story key such as E1-S1')
+  .action(async (storyKey: string, mode?: string) => {
+    const args = mode ? [storyKey, mode] : [storyKey];
+    await showWorkflowGuidance('dev-story', args);
+  });
+
+program
+  .command('resume [checkpoint]')
+  .description('Prepare the resume workflow to continue from a checkpoint')
+  .action(async (checkpoint?: string) => {
+    await showWorkflowGuidance('resume', checkpoint ? [checkpoint] : []);
   });
 
 // ============================================================
@@ -1417,6 +1818,17 @@ interface CmdEntry {
 }
 
 const COMMAND_REGISTRY: CmdEntry[] = [
+  // workflow
+  { cmd: 'workflow list',          desc: 'List the KRATOS workflow catalog',                group: 'workflow',  tags: ['workflow','list','catalog','features'] },
+  { cmd: 'workflow info <name>',   desc: 'Show metadata and next steps for a workflow',      group: 'workflow',  tags: ['workflow','info','details','inspect'] },
+  { cmd: 'workflow search',        desc: 'Search workflows by name or description',          group: 'workflow',  tags: ['workflow','search','find','lookup'] },
+  { cmd: 'workflow open <name>',   desc: 'Print the full command definition for a workflow', group: 'workflow',  tags: ['workflow','open','show','source'] },
+  { cmd: 'workflow run <name>',    desc: 'Prepare a workflow for CLI execution',             group: 'workflow',  tags: ['workflow','run','execute','start'] },
+  { cmd: 'brownfield',             desc: 'Brownfield onboarding for an existing codebase',   group: 'workflow',  tags: ['brownfield','onboard','legacy','existing-project'] },
+  { cmd: 'quick-spec',             desc: 'Prepare the quick-spec workflow',                  group: 'workflow',  tags: ['quick-spec','spec','small-change'] },
+  { cmd: 'quick-dev',              desc: 'Prepare the quick-dev workflow',                   group: 'workflow',  tags: ['quick-dev','implement','small-change'] },
+  { cmd: 'dev-story',              desc: 'Prepare the dev-story workflow for a story key',   group: 'workflow',  tags: ['dev-story','story','implement'] },
+  { cmd: 'resume',                 desc: 'Prepare the resume workflow from a checkpoint',    group: 'workflow',  tags: ['resume','checkpoint','continue'] },
   // memory
   { cmd: 'memory search',          desc: 'Semantic search across agent memory',             group: 'memory',    tags: ['search','find','query'] },
   { cmd: 'memory stats',           desc: 'Memory entry counts by partition/agent',          group: 'memory',    tags: ['stats','count'] },
@@ -1487,6 +1899,12 @@ const COMMAND_REGISTRY: CmdEntry[] = [
 
 // Context-aware next-step suggestions keyed by resolved command
 const NEXT_STEPS: Record<string, string[]> = {
+  'workflow list':             ['brownfield', 'quick-spec', 'workflow search'],
+  'workflow search':           ['workflow info', 'workflow open'],
+  'brownfield':                ['workflow open brownfield', 'agent run Kratos', 'quick-spec'],
+  'quick-spec':                ['quick-dev', 'agent run Kratos'],
+  'quick-dev':                 ['dev-story', 'agent run Kratos'],
+  'dev-story':                 ['validate artifact', 'sprint reviews'],
   'doctor':                    ['status', 'providers list', 'memory stats'],
   'status':                    ['sprint plan', 'metrics sprint', 'codebase scan'],
   'memory stats':              ['memory search', 'learn distill', 'memory export'],
@@ -1518,7 +1936,7 @@ const NEXT_STEPS: Record<string, string[]> = {
 };
 
 // Groups that match a single keyword (for "memory" → list memory subcommands)
-const COMMAND_GROUPS = ['memory','learn','sprint','providers','cost','validate',
+const COMMAND_GROUPS = ['workflow','memory','learn','sprint','providers','cost','validate',
                         'hooks','metrics','codebase','plugins','context','agent'];
 
 function normalizeRegistryCommand(cmd: string): string {
@@ -1646,25 +2064,75 @@ function fuzzyFind(input: string): CmdEntry[] {
 
 // ── Hint: dim text after cursor (fish-shell style) ───────────
 let ghostActive = false;
+let ghostKeypressHandler: ((ch: string | undefined, key: readline.Key | undefined) => void) | null = null;
 const ESC = '\x1b';
 
-function clearGhost(): void {
-  ghostActive = false;
+function buildGhostClearSequence(): string {
+  return `${ESC}[s${ESC}[0K${ESC}[u`;
 }
 
-function paintGhost(rl: readline.Interface, currentLine: string): void {
-  if (!process.stdout.isTTY) return;
+export function buildGhostSuggestionSequence(currentLine: string): string | null {
   const lower = currentLine.toLowerCase();
-  if (lower.length < 2) return;
+  if (lower.length < 2) return null;
+
   const hit = getReplCompletions(currentLine).find(cmd =>
     cmd.toLowerCase().startsWith(lower) && cmd.toLowerCase() !== lower
   );
-  if (!hit) return;
+  if (!hit) return null;
+
   const ghost = hit.slice(currentLine.length);
-  if (!ghost) return;
-  // save cursor → dim ghost text → restore cursor
-  process.stdout.write(`${ESC}7${ESC}[2m${ghost}${ESC}[0m${ESC}8`);
+  if (!ghost) return null;
+
+  return `${ESC}[s${ESC}[0K${ESC}[2m${ghost}${ESC}[0m${ESC}[u`;
+}
+
+function clearGhost(): void {
+  if (process.stdout.isTTY && ghostActive) {
+    process.stdout.write(buildGhostClearSequence());
+  }
+  ghostActive = false;
+}
+
+function paintGhost(currentLine: string): void {
+  if (!process.stdout.isTTY) return;
+  const sequence = buildGhostSuggestionSequence(currentLine);
+  if (!sequence) {
+    clearGhost();
+    return;
+  }
+
+  if (ghostActive) {
+    process.stdout.write(buildGhostClearSequence());
+  }
+  process.stdout.write(sequence);
   ghostActive = true;
+}
+
+function detachGhostKeypressHandler(): void {
+  if (ghostKeypressHandler) {
+    process.stdin.off('keypress', ghostKeypressHandler);
+    ghostKeypressHandler = null;
+  }
+}
+
+function attachGhostKeypressHandler(rl: readline.Interface): void {
+  if (!process.stdout.isTTY || !process.stdin.isTTY) return;
+
+  detachGhostKeypressHandler();
+  ghostKeypressHandler = (_ch: string | undefined, key: readline.Key | undefined) => {
+    const shouldClearOnly = key?.name === 'return' || key?.name === 'enter' || Boolean(key?.ctrl);
+
+    setImmediate(() => {
+      const currentLine = (rl as unknown as { line: string }).line ?? '';
+      if (shouldClearOnly || currentLine.length < 2) {
+        clearGhost();
+        return;
+      }
+      paintGhost(currentLine);
+    });
+  };
+
+  process.stdin.on('keypress', ghostKeypressHandler);
 }
 
 // ── Post-command "next steps" panel ─────────────────────────
@@ -1702,9 +2170,9 @@ async function startRepl(isRestart = false): Promise<void> {
   await ui.init();
   if (!isRestart) await showSplash();
 
-  // Remove any stale keypress listeners from a previous REPL or agent session
-  // to prevent duplicate echo (each listener would re-echo every keystroke).
-  process.stdin.removeAllListeners('keypress');
+  // Keep only the managed ghost-text listener across REPL restarts.
+  detachGhostKeypressHandler();
+  clearGhost();
 
   const completer = (line: string): [string[], string] => {
     return [getReplCompletions(line), line];
@@ -1717,29 +2185,8 @@ async function startRepl(isRestart = false): Promise<void> {
     completer,
   });
 
-  // Set up keypress-based inline ghost text
-  if (process.stdout.isTTY) {
-    // Guard: only call emitKeypressEvents once per process to prevent
-    // duplicate internal keypress listeners that cause doubled characters.
-    if (!(process.stdin as NodeJS.ReadStream & { _keypressDecoder?: unknown })._keypressDecoder) {
-      readline.emitKeypressEvents(process.stdin, rl);
-    }
-
-    process.stdin.on('keypress', (_ch: string | undefined, key: readline.Key | undefined) => {
-      // Clear existing ghost on any destructive key
-      if (key?.name === 'backspace' || key?.name === 'delete' ||
-          key?.name === 'return'    || key?.name === 'enter'  ||
-          key?.ctrl) {
-        clearGhost();
-        return;
-      }
-      // After readline redraws, paint suggestion
-      setImmediate(() => {
-        const currentLine = (rl as unknown as { line: string }).line ?? '';
-        paintGhost(rl, currentLine);
-      });
-    });
-  }
+  // Set up keypress-based inline ghost text without duplicating terminal handlers.
+  attachGhostKeypressHandler(rl);
 
   const t = ui.theme();
   console.log(`  ${t.dim('Tab')} complete  ${t.dim('↑↓')} history  ${t.dim('"?"')} categories  ${t.dim('Ctrl+D')} exit\n`);
@@ -1821,6 +2268,8 @@ async function startRepl(isRestart = false): Promise<void> {
       const agentName = isAgentRun ? args[2] : args[1];
       const modelTier = (isAgentRun ? args[3] : args[2]) as 'fast' | 'standard' | 'deep' | undefined;
       // Close this REPL's readline so it doesn't conflict with the agent session
+      detachGhostKeypressHandler();
+      clearGhost();
       rl.removeAllListeners('close');
       rl.removeAllListeners('SIGINT');
       rl.close();
@@ -1870,6 +2319,8 @@ async function startRepl(isRestart = false): Promise<void> {
 
   // Ctrl+D / stream close
   rl.on('close', () => {
+    detachGhostKeypressHandler();
+    clearGhost();
     console.log('');
     process.exit(0);
   });

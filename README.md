@@ -73,12 +73,21 @@ Open Chat in VS Code and use the workspace prompt files:
 ```text
 /kratos
 /kratos-help
+/kratos-brownfield
 /kratos-quick-spec
 /kratos-quick-dev
 /kratos-dev-story
 ```
 
 These prompt files live in `.github/prompts/` and work in GitHub Copilot chat without Claude-specific slash-command frontmatter.
+
+For the terminal CLI, you can also use:
+
+```bash
+npx kratos workflow list
+npx kratos brownfield .
+npx kratos quick-spec "add audit logging to the login flow"
+```
 
 ### 5 essential commands
 

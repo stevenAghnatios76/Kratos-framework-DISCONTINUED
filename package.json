@@ -22,7 +22,7 @@
   },
   "license": "AGPL-3.0",
   "scripts": {
-    "build": "tsc && find _kratos -name '*.sql' -o -name '*.yaml' -o -name '*.yml' | xargs -I{} sh -c 'mkdir -p dist/$(dirname {}) && cp {} dist/{}'",
+    "build": "tsc && find _kratos \\( -name '*.sql' -o -name '*.yaml' -o -name '*.yml' \\) -exec sh -c 'mkdir -p \"dist/$(dirname \"$1\")\" && cp \"$1\" \"dist/$1\"' _ {} \\;",
     "dev": "tsc --watch",
     "kratos": "node dist/_kratos/core/runtime/cli.js",
     "dashboard": "cd dashboard && npm install && npm start"
@@ -32,6 +32,7 @@
   },
   "files": [
     "bin/",
+    "dist/",
     "dashboard/",
     "kratos-install.sh"
   ],

@@ -66,7 +66,128 @@ export function icons() {
     inactive: k.dim('○'),
     arrow:    k.dim('▸'),
     bullet:   k.dim('·'),
+    info:     k.cyan('ℹ'),
+    warn:     k.yellow('⚠'),
   };
+}
+
+export type MessageKind = 'info' | 'success' | 'warn' | 'error';
+
+export interface SpinnerPreset {
+  spinner: string;
+  color: 'cyan' | 'yellow' | 'green' | 'magenta' | 'blue';
+}
+
+function terminalWidth(fallback: number = 80): number {
+  return Math.max(36, Math.min(process.stdout.columns || fallback, 100));
+}
+
+function wrapText(text: string, width: number): string[] {
+  const safeWidth = Math.max(12, width);
+  const paragraphs = text.split('\n');
+  const lines: string[] = [];
+
+  for (const paragraph of paragraphs) {
+    if (!paragraph.trim()) {
+      lines.push('');
+      continue;
+    }
+
+    const words = paragraph.split(/\s+/);
+    let current = '';
+
+    for (const word of words) {
+      const candidate = current ? `${current} ${word}` : word;
+      if (stripAnsi(candidate).length <= safeWidth) {
+        current = candidate;
+      } else {
+        if (current) lines.push(current);
+        current = word;
+      }
+    }
+
+    if (current) lines.push(current);
+  }
+
+  return lines.length > 0 ? lines : [''];
+}
+
+function truncateCell(value: string, width: number): string {
+  const safeWidth = Math.max(4, width);
+  const plain = stripAnsi(value);
+  if (plain.length <= safeWidth) return value.padEnd(safeWidth);
+  return `${plain.slice(0, Math.max(0, safeWidth - 1))}…`;
+}
+
+export function formatCallout(kind: MessageKind, title: string, message: string, width: number = terminalWidth() - 6): string[] {
+  const iconMap: Record<MessageKind, string> = {
+    info: 'ℹ',
+    success: '✓',
+    warn: '⚠',
+    error: '✗',
+  };
+
+  const lines = [`${iconMap[kind]} ${title}`];
+  for (const line of wrapText(message, width)) {
+    lines.push(line);
+  }
+  return lines;
+}
+
+function renderMessage(kind: MessageKind, message: string): void {
+  const t = theme();
+  const ic = icons();
+  const styles = {
+    info: { icon: ic.info, color: t.dim },
+    success: { icon: ic.pass, color: t.pass },
+    warn: { icon: ic.warn, color: t.warn },
+    error: { icon: ic.fail, color: t.fail },
+  } as const;
+
+  const style = styles[kind];
+  const lines = wrapText(message, terminalWidth() - 8);
+  lines.forEach((line, index) => {
+    const prefix = index === 0 ? `${style.icon} ` : '  ';
+    const painter = index === 0 ? style.color : t.dim;
+    const sink = kind === 'error' ? console.error : console.log;
+    sink(`  ${prefix}${painter(line)}`);
+  });
+}
+
+export function getSpinnerPreset(text: string): SpinnerPreset {
+  const lower = text.toLowerCase();
+
+  if (/(scan|scanning|index|refresh)/.test(lower)) {
+    return { spinner: 'earth', color: 'cyan' };
+  }
+  if (/(launch|starting|dashboard|server)/.test(lower)) {
+    return { spinner: 'moon', color: 'magenta' };
+  }
+  if (/(build|compile|distill|migrate)/.test(lower)) {
+    return { spinner: 'dots12', color: 'blue' };
+  }
+  if (/(test|validate|check|review)/.test(lower)) {
+    return { spinner: 'bouncingBar', color: 'yellow' };
+  }
+
+  return { spinner: 'dots', color: 'cyan' };
+}
+
+export function callout(kind: MessageKind, title: string, message: string): void {
+  const t = theme();
+  const styles = {
+    info: t.accent,
+    success: t.pass,
+    warn: t.warn,
+    error: t.fail,
+  } as const;
+
+  const lines = formatCallout(kind, title, message, terminalWidth() - 8);
+  console.log('');
+  lines.forEach((line, index) => {
+    const painter = index === 0 ? styles[kind] : t.dim;
+    console.log(`  ${painter(line)}`);
+  });
 }
 
 // ── Heading ─────────────────────────────────────────────────
@@ -143,43 +264,58 @@ export function panel(title: string, lines: string[]): void {
 
 export function table(headers: string[], rows: string[][]): void {
   const t = theme();
-  const colWidths = headers.map((h, i) => {
-    const maxData = rows.reduce((max, row) => Math.max(max, (row[i] || '').length), 0);
-    return Math.max(h.length, maxData) + 2;
+  const availableWidth = Math.max(50, terminalWidth() - 4);
+  const minWidths = headers.map((header, index) => Math.max(index === 1 ? 20 : 10, header.length + 2));
+  const colWidths = headers.map((header, index) => {
+    const maxData = rows.reduce((max, row) => Math.max(max, stripAnsi(row[index] || '').length), 0);
+    return Math.max(minWidths[index], Math.min(maxData + 2, index === 1 ? 44 : 24));
   });
 
-  const headerLine = headers.map((h, i) => h.padEnd(colWidths[i])).join('');
-  console.log(`    ${t.dim(headerLine)}`);
+  const separatorWidth = headers.length - 1;
+  let totalWidth = colWidths.reduce((sum, width) => sum + width, 0) + separatorWidth;
+
+  while (totalWidth > availableWidth) {
+    let widestIndex = -1;
+    let widestWidth = -1;
+    for (let i = 0; i < colWidths.length; i += 1) {
+      if (colWidths[i] > minWidths[i] && colWidths[i] > widestWidth) {
+        widestWidth = colWidths[i];
+        widestIndex = i;
+      }
+    }
+    if (widestIndex === -1) break;
+    colWidths[widestIndex] -= 1;
+    totalWidth -= 1;
+  }
+
+  const formatRow = (row: string[]): string => row
+    .map((cell, index) => truncateCell(cell || '', colWidths[index]).padEnd(colWidths[index]))
+    .join(' ');
+
+  console.log(`    ${t.dim(formatRow(headers))}`);
+  console.log(`    ${t.dim('─'.repeat(Math.min(totalWidth, availableWidth)))}`);
 
   for (const row of rows) {
-    const line = row.map((cell, i) => cell.padEnd(colWidths[i])).join('');
-    console.log(`    ${t.primary(line)}`);
+    console.log(`    ${t.primary(formatRow(row))}`);
   }
 }
 
 // ── Messages ────────────────────────────────────────────────
 
 export function error(message: string): void {
-  const t = theme();
-  const ic = icons();
-  console.error(`  ${ic.fail} ${t.fail(message)}`);
+  renderMessage('error', message);
 }
 
 export function warn(message: string): void {
-  const k = c();
-  console.log(`  ${k.yellow('●')} ${theme().warn(message)}`);
+  renderMessage('warn', message);
 }
 
 export function success(message: string): void {
-  const t = theme();
-  const ic = icons();
-  console.log(`  ${ic.pass} ${t.pass(message)}`);
+  renderMessage('success', message);
 }
 
 export function info(message: string): void {
-  const t = theme();
-  const ic = icons();
-  console.log(`  ${ic.bullet} ${t.dim(message)}`);
+  renderMessage('info', message);
 }
 
 // ── Divider ─────────────────────────────────────────────────
@@ -195,10 +331,11 @@ export function divider(): void {
 export function spinner(text: string): any {
   const oraFn = _ora!;
   const t = theme();
+  const preset = getSpinnerPreset(text);
   const s = oraFn({
     text: t.dim(text),
-    color: 'cyan',
-    spinner: 'dots',
+    color: preset.color,
+    spinner: preset.spinner,
     indent: 2,
   }).start();
   return s;
