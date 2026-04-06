@@ -503,6 +503,104 @@ Each agent has a persistent memory sidecar (`_kratos/_memory/*-sidecar/`) that s
 
 ---
 
+## Obsidian Integration
+
+KRATOS can turn your `docs/` directory into a fully connected [Obsidian](https://obsidian.md) vault — giving you a visual knowledge graph, Dataview dashboards, and wikilink navigation across all project artifacts.
+
+### What it provides
+
+- **Knowledge graph** — see how PRDs, architecture, epics, stories, test plans, and reviews connect in Obsidian's graph view
+- **Wikilinks** — navigate between related artifacts with `[[wikilinks]]` (PRD -> Architecture -> Epics -> Stories -> Reviews)
+- **Dataview dashboards** — pre-built queries for sprint status, review gate progress, and risk overview
+- **Tag taxonomy** — filter artifacts by type, phase, status, priority, risk, agent, and sprint
+- **MOC (Map of Content) files** — auto-generated index pages for each artifact directory
+
+### Enabling
+
+The integration is **disabled by default**. Enable it in one of two ways:
+
+**During installation:**
+
+```bash
+npx kratos-framework init ~/my-project
+# Answer "y" when prompted for Obsidian integration
+```
+
+**After installation:**
+
+1. Set `obsidian.enabled: true` in `_kratos/_config/global.yaml`
+2. Run the init command to set up the vault:
+
+```bash
+/kratos-obsidian-init
+```
+
+This creates the `.obsidian/` vault config in `docs/`, generates MOC index files, and enriches any existing artifacts with Obsidian metadata.
+
+### How it works
+
+When enabled, a post-step hook automatically enriches every artifact written to `docs/` with:
+
+- **Tags** — `#kratos/type/story`, `#kratos/phase/implementation`, `#kratos/status/in-progress`, `#kratos/priority/P1`, `#kratos/agent/Theo`
+- **Aliases** — alternative names for wikilink resolution (story keys, product names)
+- **Wikilinks** — cross-references between related artifacts inserted automatically
+- **CSS classes** — `cssclass: kratos-story` for optional Obsidian CSS styling
+
+The hook is non-blocking — if enrichment fails, the workflow continues normally.
+
+### Recommended Obsidian plugins
+
+| Plugin | Purpose |
+|--------|---------|
+| [Dataview](https://github.com/blacksmithgu/obsidian-dataview) | Query artifacts as a database — sprint dashboards, story tables |
+| [Graph Analysis](https://github.com/SkepticMystic/graph-analysis) | Enhanced graph view with metrics and clustering |
+
+### MOC structure
+
+```
+docs/
+├── _obsidian-moc/
+│   ├── home.md                  # Master index with Dataview dashboards
+│   ├── planning-moc.md          # PRDs, architecture, UX designs
+│   ├── implementation-moc.md    # Stories, sprints, epics
+│   ├── test-moc.md              # Test plans, reviews
+│   └── creative-moc.md          # Creative artifacts
+├── planning-artifacts/
+├── implementation-artifacts/
+├── test-artifacts/
+└── creative-artifacts/
+```
+
+### Tag taxonomy
+
+| Tag pattern | Example | Applied to |
+|------------|---------|-----------|
+| `kratos/type/{template}` | `kratos/type/story` | All artifacts |
+| `kratos/phase/{phase}` | `kratos/phase/implementation` | All artifacts |
+| `kratos/status/{status}` | `kratos/status/in-progress` | Stories |
+| `kratos/priority/{level}` | `kratos/priority/P0` | Stories |
+| `kratos/risk/{level}` | `kratos/risk/high` | Stories |
+| `kratos/agent/{name}` | `kratos/agent/Theo` | All artifacts with author |
+| `kratos/sprint/{id}` | `kratos/sprint/S1` | Sprint-assigned stories |
+| `kratos/epic/{key}` | `kratos/epic/E1` | Stories |
+
+### Configuration
+
+All Obsidian settings live in `_kratos/_config/global.yaml` under the `obsidian:` section:
+
+```yaml
+obsidian:
+  enabled: false          # master toggle
+  vault_root: "{output_folder}"
+  wikilinks: true         # inject [[wikilinks]] between artifacts
+  tags: true              # add tags to frontmatter
+  moc_dir: "_obsidian-moc"
+  dataview_queries: true  # include Dataview blocks in MOC files
+  tag_prefix: "kratos"    # namespace prefix for all tags
+```
+
+---
+
 ## Limitations
 
 - **Single-user only** — KRATOS uses markdown files for state management (stories, sprint status, architecture docs). Multiple team members editing the same project will run into file conflicts.

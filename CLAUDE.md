@@ -184,3 +184,14 @@ Agent memory sidecars accumulate decisions across sessions. Run `/kratos-memory-
 - Create agent files over 200 lines — delegate depth to skills and knowledge fragments
 - Chase config inheritance chains at runtime — use pre-resolved configs
 - Load more than 40K tokens of framework content in a single activation
+
+## Obsidian Integration (optional)
+
+When `obsidian.enabled` is true in global.yaml:
+- Every artifact written to `docs/` gets enriched frontmatter (tags, aliases, wikilinks) via the `obsidian-metadata` protocol
+- Use `[[wikilink|display]]` syntax for cross-artifact references (PRD <-> Architecture <-> Epics <-> Stories)
+- Frontmatter `tags` array must use the `kratos/` namespace prefix
+- Frontmatter `aliases` array must include the artifact's primary identifier (story key, product name, etc.)
+- MOC files in `docs/_obsidian-moc/` are auto-generated — do not manually edit them
+- The `obsidian-metadata` protocol runs as a post-step hook and must never block workflow execution
+- When Obsidian is disabled, no wikilinks, tags, or aliases are added — artifacts remain plain markdown

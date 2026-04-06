@@ -28,7 +28,12 @@ hooks:
     #   timeout: 120
     #   condition: "workflow.has_tests"
 
-  post-step: []
+  post-step:
+    - name: "obsidian-metadata-enrichment"
+      protocol: "{installed_path}/core/protocols/obsidian-metadata.xml"
+      on_fail: "warn"
+      timeout: 30
+      condition: "config.obsidian.enabled == true"
     # Example:
     # - command: "npx eslint --fix {files_modified}"
     #   on_fail: "warn"

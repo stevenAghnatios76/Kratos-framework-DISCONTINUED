@@ -522,9 +522,43 @@ _kratos/_memory/*-sidecar/*.md
 _kratos/_memory/*-sidecar/*.yaml
 _kratos/**/.resolved/*.yaml
 !_kratos/**/.resolved/.gitkeep
+docs/.obsidian/
 GITIGNORE
 )"
   append_if_missing "$TARGET/.gitignore" "# Kratos Framework — runtime artifacts" "$gitignore_block"
+
+  # Step 11: Optional Obsidian vault setup
+  if [[ "$OPT_YES" != true && "$OPT_MINIMAL" != true ]]; then
+    printf "\n"
+    printf "  ${BOLD}Optional: Obsidian Integration${RESET}\n"
+    printf "  Set up docs/ as an Obsidian vault with connected knowledge graph?\n"
+    printf "  (Requires Obsidian — https://obsidian.md)\n"
+    printf "  Enable Obsidian integration? [y/N]: "
+    local obsidian_confirm
+    read -r obsidian_confirm
+    if [[ "$obsidian_confirm" =~ ^[Yy] ]]; then
+      step "Enabling Obsidian integration..."
+      local global_file="$TARGET/_kratos/_config/global.yaml"
+      if [[ -f "$global_file" ]]; then
+        sed -i '' 's/^  enabled: false$/  enabled: true/' "$global_file" 2>/dev/null || true
+      fi
+      # Copy vault template configs to docs/.obsidian/
+      local vault_template="$source/_kratos/lifecycle/obsidian-vault-template"
+      if [[ -d "$vault_template" ]]; then
+        mkdir -p "$TARGET/docs/.obsidian"
+        for cfg in "$vault_template"/*.json; do
+          [[ -f "$cfg" ]] || continue
+          cp "$cfg" "$TARGET/docs/.obsidian/"
+        done
+        success "Obsidian vault config installed to docs/.obsidian/"
+      fi
+      # Create MOC directory
+      mkdir -p "$TARGET/docs/_obsidian-moc"
+      mkdir -p "$TARGET/docs/_obsidian-moc/attachments"
+      success "Obsidian integration enabled"
+      detail "Run /kratos-obsidian-init in Claude Code to generate MOC index files"
+    fi
+  fi
 
   # Summary
   echo ""

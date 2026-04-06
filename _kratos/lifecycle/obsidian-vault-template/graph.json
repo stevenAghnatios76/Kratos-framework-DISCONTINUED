@@ -1,0 +1,55 @@
+{
+  "collapse-filter": false,
+  "search": "",
+  "showTags": true,
+  "showAttachments": false,
+  "showOrphans": true,
+  "collapse-color-groups": false,
+  "colorGroups": [
+    {
+      "query": "path:planning-artifacts",
+      "color": {
+        "a": 1,
+        "rgb": 4488191
+      }
+    },
+    {
+      "query": "path:implementation-artifacts",
+      "color": {
+        "a": 1,
+        "rgb": 2533018
+      }
+    },
+    {
+      "query": "path:test-artifacts",
+      "color": {
+        "a": 1,
+        "rgb": 16750848
+      }
+    },
+    {
+      "query": "path:creative-artifacts",
+      "color": {
+        "a": 1,
+        "rgb": 11141290
+      }
+    },
+    {
+      "query": "path:_obsidian-moc",
+      "color": {
+        "a": 1,
+        "rgb": 8421504
+      }
+    }
+  ],
+  "collapse-display": false,
+  "showArrow": true,
+  "textFadeMultiplier": 0,
+  "nodeSizeMultiplier": 1,
+  "lineSizeMultiplier": 1,
+  "collapse-forces": true,
+  "centerStrength": 0.5,
+  "repelStrength": 10,
+  "linkStrength": 1,
+  "linkDistance": 250
+}

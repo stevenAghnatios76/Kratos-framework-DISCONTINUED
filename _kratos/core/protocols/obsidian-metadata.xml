@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Obsidian Metadata Enrichment Protocol
+  Enriches Kratos artifact markdown files with Obsidian-compatible metadata.
+  Called as a post-step hook when obsidian.enabled is true.
+  Non-blocking: warns on failure, never halts workflow execution.
+-->
+<protocol id="obsidian-metadata" version="1.0.0">
+
+  <description>
+    Enriches artifact markdown files with Obsidian-compatible frontmatter (tags, aliases, cssclass)
+    and injects wikilinks between related artifacts for knowledge graph navigation.
+  </description>
+
+  <gate>
+    <condition>config.obsidian.enabled == true</condition>
+    <on_false>EXIT — Obsidian integration disabled, skip all steps</on_false>
+  </gate>
+
+  <context>
+    <input>files_modified — list of artifact files created or updated by the current workflow step</input>
+    <input>config.obsidian — full obsidian configuration block from global.yaml</input>
+    <input>config.tag_prefix — namespace prefix for all Obsidian tags (default: "kratos")</input>
+  </context>
+
+  <!-- ─── Step 1: Identify artifact type ─── -->
+  <step n="1" title="Classify each modified file">
+    <description>
+      For each file in files_modified that resides under {output_folder}/:
+      1. Read the file's YAML frontmatter
+      2. Extract the `template` field to determine artifact type
+      3. If no `template` field exists, infer type from the file path:
+         - planning-artifacts/ → "planning"
+         - implementation-artifacts/ → "implementation"
+         - test-artifacts/ → "testing"
+         - creative-artifacts/ → "creative"
+      4. Determine the lifecycle phase from the artifact directory
+    </description>
+  </step>
+
+  <!-- ─── Step 2: Enrich frontmatter with tags ─── -->
+  <step n="2" title="Add Obsidian tags to frontmatter">
+    <condition>config.obsidian.tags == true</condition>
+    <description>
+      Add a `tags` array to the YAML frontmatter. Derive tags from existing fields:
+
+      **All artifacts:**
+      - {tag_prefix}/type/{template} — e.g., kratos/type/story, kratos/type/prd
+      - {tag_prefix}/phase/{phase} — e.g., kratos/phase/implementation
+
+      **Stories only (template == "story"):**
+      - {tag_prefix}/status/{status} — e.g., kratos/status/backlog
+      - {tag_prefix}/priority/{priority} — e.g., kratos/priority/P1
+      - {tag_prefix}/risk/{risk} — e.g., kratos/risk/high
+      - {tag_prefix}/sprint/{sprint_id} — only if sprint_id is not null
+      - {tag_prefix}/epic/{epic} — e.g., kratos/epic/E1
+
+      **If author field exists:**
+      - {tag_prefix}/agent/{author} — e.g., kratos/agent/Theo
+
+      Do NOT duplicate tags that already exist in the frontmatter.
+    </description>
+  </step>
+
+  <!-- ─── Step 3: Add aliases ─── -->
+  <step n="3" title="Add Obsidian aliases to frontmatter">
+    <description>
+      Add an `aliases` array to the YAML frontmatter for alternative wikilink targets:
+
+      **Stories:** aliases = ["{story_key}", "Story: {story_key} — {title}"]
+      **PRDs:** aliases = ["{product_name} PRD"]
+      **Architecture:** aliases = ["{product_name} Architecture"]
+      **Sprint plans:** aliases = ["Sprint {sprint_id}"]
+      **Epic status:** aliases = ["Epic {epic_key} Status"]
+      **Test plans:** aliases = ["{product_name} Test Plan"]
+      **Reviews:** aliases = ["{review_type} Review: {story_key}"]
+      **All others:** aliases = ["{document title from H1}"]
+
+      Do NOT overwrite existing aliases — merge with any that already exist.
+    </description>
+  </step>
+
+  <!-- ─── Step 4: Add cssclass ─── -->
+  <step n="4" title="Add cssclass for Obsidian CSS snippets">
+    <description>
+      Add `cssclass: kratos-{template}` to frontmatter.
+      Examples: kratos-story, kratos-prd, kratos-architecture, kratos-sprint-plan.
+      This allows users to create Obsidian CSS snippets that style different artifact types.
+    </description>
+  </step>
+
+  <!-- ─── Step 5: Inject wikilinks ─── -->
+  <step n="5" title="Inject wikilinks between related artifacts">
+    <condition>config.obsidian.wikilinks == true</condition>
+    <description>
+      Add [[wikilinks]] to connect related artifacts. Use Obsidian's shortest-path resolution
+      with display text: [[filename|Display Text]].
+
+      **Story artifacts:**
+      - Epic reference: replace `> **Epic:** {epic_key}` with `> **Epic:** [[epics-and-stories|{epic_key}]]`
+      - depends_on entries: convert each key to [[{key}-*|{key}]]
+      - blocks entries: convert each key to [[{key}-*|{key}]]
+      - traces_to entries: link requirement IDs back to the PRD
+
+      **Architecture artifacts:**
+      - Add backlink: `> **PRD:** [[{prd_filename}|PRD]]`
+
+      **Sprint plan artifacts:**
+      - Each committed story key becomes [[{story_filename}|{story_key}]]
+
+      **Epic status artifacts:**
+      - Each story row becomes a wikilink to the story file
+
+      **Review/test artifacts:**
+      - Link to the story being reviewed: [[{story_filename}|{story_key}]]
+
+      **Deployment artifacts:**
+      - Link to sprint plan and included stories
+
+      **Add a Related Artifacts section** at the end of the document (before ## Review Gate if present):
+      ```
+      ## Related Artifacts
+      - [[artifact1|Display Name]]
+      - [[artifact2|Display Name]]
+      ```
+
+      RULES:
+      - Never create broken wikilinks — only link to files that exist in the vault
+      - Use glob matching for story files: {story_key}-*.md
+      - If the target file cannot be found, use plain text instead of a wikilink
+    </description>
+  </step>
+
+  <!-- ─── Error handling ─── -->
+  <error-handling>
+    <policy>non-blocking</policy>
+    <description>
+      If any step fails:
+      1. Log a warning with the step number and error message
+      2. Continue to the next file in files_modified
+      3. Never halt the parent workflow
+      4. Report a summary of enriched vs skipped files at the end
+    </description>
+  </error-handling>
+
+</protocol>

@@ -137,3 +137,18 @@ observability:
     cache_dir: "{installed_path}/.cache"
     auto_build: false
     invalidate_on_config_change: true
+
+# Obsidian vault integration (optional)
+obsidian:
+  enabled: false
+  vault_root: "{output_folder}"
+  wikilinks: true
+  tags: true
+  moc_dir: "_obsidian-moc"
+  dataview_queries: true
+  tag_prefix: "kratos"
+  graph_groups:
+    planning: ["prd", "architecture", "product-brief", "ux-design-assessment"]
+    implementation: ["story", "sprint-plan", "epic-status", "deployment"]
+    testing: ["test-plan", "review", "nfr-assessment"]
+    creative: ["design-thinking", "innovation"]

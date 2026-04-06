@@ -46,4 +46,13 @@ Called by any workflow that changes story status. Ensures all files stay in sync
     Update last_updated timestamp.</action>
   <action>Write back story-index.yaml. Non-blocking — if write fails, log warning and continue. The index is a performance optimization, not a source of truth.</action>
 </step>
+
+<step n="4" title="Update Obsidian tags (if enabled)">
+  <condition>config.obsidian.enabled == true</condition>
+  <action>Read the story file updated in Step 1</action>
+  <action>In the YAML frontmatter tags array: replace any existing {tag_prefix}/status/* tag with {tag_prefix}/status/{new_status}</action>
+  <action if="sprint_id parameter is provided and not null">Add or update {tag_prefix}/sprint/{sprint_id} tag</action>
+  <action if="sprint_id parameter is explicitly null">Remove any {tag_prefix}/sprint/* tag</action>
+  <action>This step is non-blocking — log warning on failure and continue. Obsidian metadata must never halt status transitions.</action>
+</step>
 </protocol>

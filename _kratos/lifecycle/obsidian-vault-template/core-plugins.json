@@ -1,0 +1,12 @@
+{
+  "graph": true,
+  "backlink": true,
+  "outgoing-link": true,
+  "tag-pane": true,
+  "page-preview": true,
+  "search": true,
+  "file-explorer": true,
+  "editor-status": true,
+  "markdown-importer": false,
+  "word-count": true
+}
