@@ -5,8 +5,6 @@
 > KRATOS is no longer actively maintained or developed. No new features, bug fixes, or support will be provided.
 >
 > You are welcome to fork it, use it, or build upon it under the terms of the [AGPL-3.0 license](LICENSE).
->
-> **Successor project:** [Symphony Framework](https://github.com/stevenAghnatios76/symphony-framework)
 
 ---
 
